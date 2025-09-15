@@ -1,0 +1,17 @@
+Commenting functions: 
+
+Start the function with a comment using the following format:
+
+""" 
+    (Description of function)  
+
+    Returns
+    -------
+    (return variable name) : (return variable type)
+        (variable description)
+
+    Parameters
+    ----------
+    (input param name) : (input param type)
+        (variable description)
+"""

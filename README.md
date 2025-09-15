@@ -1,1 +1,2 @@
-Repository for projects for Applied Data Analysis and Machine Learning
+# Github repository for projects in FYS-STK4155: Applied Data Analysis and Machine Learning
+
