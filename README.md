@@ -9,11 +9,11 @@ Group consisting of:
 To install required packages:
 
 Using pip
-'''bash
+´´´ bash
 pip install -r requirements.txt
-'''
+´´´
 Using conda
-'''bash
+'''
 conda install --yes --file requirements.txt
 '''
 Once the apropriate environment has been created, and the necessary packages are up to date the main code is run from the central jupyter notebook "assignment*.ipynb", for example using a jupyter environment, or VS code. 
