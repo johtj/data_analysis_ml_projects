@@ -1,0 +1,84 @@
+**Spørsmål [Tell me in depth about Lasso regression | Prøv i Copilot Chat](https://m365.cloud.microsoft/chat/entity1-d870f6cd-4aa5-4d42-9626-ab690c041429/eyJpZCI6IlZYTmxjbFl4ZkdoMGRIQnpPaTh2YzNWaWMzUnlZWFJsTFdsdWRDNXZabVpwWTJVdVkyOXRMM3hQU1VRNk56a3lZVEkyTVRJdE5qSmtZaTAwTkdWaExUazJZV1F0TWpkak9EQXpOVE0zTnpnemZETmtaREptTUdJNUxUbG1aRE10TkRJd1pTMWhNbVV5TFRVMFpEVmxOREV3Tmpoa01Yd3lNREkxTFRBNUxUSTBWREV3T2pVME9qVTRMakF3T0RVd01UbGEiLCJzY2VuYXJpbyI6InNoYXJlTGlua1ZpYVJpY2hDb3B5IiwicHJvcGVydGllcyI6eyJwcm9tcHRTb3VyY2UiOiJ1c2VyIiwiY2xpY2tUaW1lc3RhbXAiOiIyMDI1LTA5LTI0VDEwOjU0OjU3LjkyNVoifSwiY2hhdFR5cGUiOiJ3ZWIiLCJ2ZXJzaW9uIjoxLjF9)**
+Tell me in depth about Lasso regression
+**Svar**
+Lasso regression (Least Absolute Shrinkage and Selection Operator) is a type of **linear regression** that adds **L1 regularization** to the cost function. It’s widely used for **feature selection** and **preventing overfitting** in high-dimensional datasets.
+
+---
+
+### **1. The Core Idea**
+In ordinary least squares (OLS) regression, we minimize:
+
+\[
+\text{RSS} = \sum_{i=1}^n (y_i - \hat{y}_i)^2
+\]
+
+where \( y_i \) is the actual value and \( \hat{y}_i \) is the predicted value.
+
+Lasso modifies this by adding an **L1 penalty** on the coefficients:
+
+\[
+\text{Cost Function: } \min_{\beta} \left( \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \sum_{j=1}^p |\beta_j| \right)
+\]
+
+- \( \lambda \) controls the strength of the penalty.
+- The penalty term \( \sum |\beta_j| \) encourages **sparsity** (some coefficients become exactly zero).
+
+---
+
+### **2. Why Use Lasso?**
+- **Feature Selection**: Lasso can shrink some coefficients to zero, effectively removing irrelevant features.
+- **Handles Multicollinearity**: When predictors are correlated, Lasso tends to pick one and ignore others.
+- **Prevents Overfitting**: By penalizing large coefficients, it reduces model complexity.
+
+---
+
+### **3. Comparison with Ridge Regression**
+- **Ridge** uses L2 penalty (\( \sum \beta_j^2 \)), which shrinks coefficients but rarely makes them zero.
+- **Lasso** uses L1 penalty, which can zero out coefficients → good for sparse models.
+- **Elastic Net** combines L1 and L2 penalties for a balance.
+
+---
+
+### **4. Geometric Intuition**
+- The constraint region for Lasso is a **diamond shape** (L1 norm), while Ridge is a **circle** (L2 norm).
+- The diamond’s corners make it more likely for the solution to hit an axis → some coefficients become zero.
+
+---
+
+### **5. When to Use Lasso**
+- When you have **many features** and expect only a few to be important.
+- When you want **automatic feature selection**.
+- When interpretability matters (fewer predictors).
+
+---
+
+### **6. Limitations**
+- If \( p > n \) (more features than samples), Lasso can select at most \( n \) features.
+- If features are highly correlated, Lasso may arbitrarily pick one and ignore others.
+- Sensitive to scaling → **always standardize features** before applying Lasso.
+
+---
+
+### **7. Implementation in Python**
+Here’s a quick example using `scikit-learn`:
+
+```python
+from sklearn.linear_model import Lasso
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+
+# Example: Lasso regression with alpha = 0.1
+model = make_pipeline(StandardScaler(), Lasso(alpha=0.1))
+model.fit(X_train, y_train)
+
+print("Coefficients:", model.named_steps['lasso'].coef_)
+```
+
+---
+
+Would you like me to:
+✅ **Draw a diagram** showing the geometric intuition of Lasso vs Ridge?  
+✅ **Show a practical example with real data and plots** (e.g., coefficient shrinkage)?  
+✅ **Compare Lasso, Ridge, and Elastic Net in detail with code and graphs**?  
+
+Which one sounds most useful for you?
