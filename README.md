@@ -13,10 +13,16 @@ Using pip
 ``
 pip install -r requirements.txt
 ``
+
+
 Using conda
+
+
 ``
 conda install --yes --file requirements.txt
 ``
+
+
 Once the apropriate environment has been created, and the necessary packages are up to date the main code is run from the central jupyter notebook "assignment*.ipynb", for example using a jupyter environment, or VS code. 
 
 ## Directory structure
