@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
-from main_methods import OLS_parameters,Ridge_parameters
+
+from main_methods import OLS_parameters,Ridge_parameters, lasso_gradient_descent
 from errors import MSE,R2
 
 def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=False):
@@ -192,10 +193,10 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
     return polynomial_degree, mse_train, mse_test, r2_train, r2_test
 
 
-def explore_lambda(X_train, X_test, y_train, y_test, lambd,n=50,verbose=False):
+def explore_lambda(X_train, X_test, y_train, y_test, lambdas ,verbose=False):
     """
     Explores the effect of polynomial degree on MSE and R2 for
-    both training and test datasets using OLS regression.
+    both training and test datasets using Ridge regression.
 
     Returns
     -------
@@ -229,12 +230,12 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambd,n=50,verbose=False):
     y_test : numpy array shape (n)
         Test target vector
     
-    lambd : tuple (int,int)
-        assuming lambdas will be generated using 
-        np.logspace
+    lambdas : numpy array shape (n)
+        lambda values
     
-    n : int
-        number of generated values for lambda, default set to 50
+    verbose : Bool
+        Include verbose output from function, default set to false
+   
     """
 
     lambdas = []
@@ -244,8 +245,7 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambd,n=50,verbose=False):
     r2_test = []
 
     
-    for l in np.logspace(lambd[0],lambd[1],n):
-        lambdas.append(l)
+    for l in lambdas:
 
         # Apply ridge regression
         theta_ridge = Ridge_parameters(X_train, y_train,l)
@@ -269,3 +269,164 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambd,n=50,verbose=False):
 
     
     return lambdas, mse_train, mse_test, r2_train, r2_test
+
+
+
+def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, tol, max_iter, fit_intercept, verbose=False):
+    """
+    Grid search og lamda and eta values for finding optimal parameters for Lasso
+    regression, where lowest mse is defined as optimal criterion
+
+    Returns
+    -------
+    best_lasso: list
+        list with dictionaries for lambda, learning rate, mse, coef and intercept for all
+        analyzed variants of lambda and eta values
+    
+    mse_train: float
+        value for MSE based on training data
+    
+    mse_test: float
+        value for MSE based on test data
+    
+    r2_train: float
+        value for R2 based on training data
+    
+    r2_test: float
+        value for R2 based on test data
+    
+    mse_values: list
+        list with mse values for combinations of lambda and eta
+        
+    Parameters
+    ----------
+    X_train : numpy array shape (n,f)
+        Feature matrix for the train data, where n is the number
+        of data points and f is the number of features.
+    
+    X_test : numpy array shape (n,f)
+        Feature matrix for the test data, where n is the number
+        of data points and f is the number of features.
+
+    y_train : numpy array shape (n)
+        Y values of the train data set. 
+
+    y_test : numpy array shape (n)
+        Y values of the test data set. 
+    
+    lambda_ : int
+        regularization
+    
+    learning_rate : float
+        gradient descent parameter
+    
+    tol: float
+        tolerance for convergence stopping criteria
+    
+    max_iter : int
+        number of iterations
+
+    use_intercept : Bool
+        Bool to determine if intercept should be included or not in regression:
+        False : no intercept 
+        True : include intercept
+        
+    verbose : Bool
+        Include verbose output from function, default set to false
+    """
+
+    lasso_results = []
+    mse_train = []
+    mse_test = []
+    r2_train = []
+    r2_test = []
+
+    for lambda_ in lambdas:
+        for lr in learning_rate:
+            coef, intercept = lasso_gradient_descent(X_train, y_train, lambda_, lr, tol, max_iter, fit_intercept)
+            y_tilde_test = X_test @ coef  + intercept
+            mse = MSE(y_test, y_tilde_test)
+            lasso_results.append({
+                'lambda': lambda_,
+                'learning_rate': lr,
+                'mse': mse,
+                'coef': coef,
+                'intercept': intercept
+            })
+
+    best_lasso = min(lasso_results, key=lambda r: r['mse'])
+
+    
+    # Extract all MSE values from the list
+    mse_values = np.array([entry['mse'] for entry in lasso_results if 'mse' in entry])
+
+
+    y_tilde_train = X_train @ best_lasso['coef'] + best_lasso['intercept']
+    y_tilde_test = X_test @ best_lasso['coef'] + best_lasso['intercept']
+
+    # Calculate MSE for training and test data
+    mse_train_lasso = MSE(y_train, y_tilde_train)
+    mse_test_lasso = MSE(y_test, y_tilde_test)
+    mse_train.append(mse_train_lasso)
+    mse_test.append(mse_test_lasso)
+    if verbose: print(f"Lambda: {lambda_}, MSE_train_lasso: {mse_train_lasso}, MSE_test_lasso: {mse_test_lasso}")
+    
+    # Calculate R2 for training and test data
+    r2_train_lasso = R2(y_train, y_tilde_train)
+    r2_test_lasso = R2(y_test, y_tilde_test)
+    r2_train.append(r2_train_lasso)
+    r2_test.append(r2_test_lasso)
+    if verbose: print(f"Lambda: {lambda_}, R2_train_lasso: {r2_train_lasso}, R2_test_lsso: {r2_test_lasso}")
+
+    if verbose:
+        print('Own implementation Lasso')
+        print(best_lasso['lambda'])
+        print(best_lasso['learning_rate'])
+        print(best_lasso['mse'])
+        print(best_lasso['coef'], best_lasso['intercept'])
+        print('\n')
+
+    return best_lasso, mse_train, mse_test, r2_train, r2_test, mse_values
+
+
+
+
+def plot_heatmap_lasso(mse_array, lambda_n, etas):
+    """
+    Plotting of heatmap from mse values from lasso_grid_search
+    Depends on number of lambda values to explore and learning rate (etas)
+
+    Returns
+    -------
+    None
+        
+    Parameters
+    ----------
+    mse_array : numpy array shape (n)
+        array with mse values 
+
+    lambdas_n : int
+        number of lamda values explored
+
+    etas : list
+        eta (learning rate) values explored
+    """
+
+    mse_matrix = np.array(mse_array).reshape((lambda_n, len(etas)))
+    print(mse_matrix.shape)
+
+
+    plt.figure(figsize=(6,4))
+    fig, ax = plt.subplots()
+    im = ax.imshow(mse_matrix)
+
+    for i in range(0, (lambda_n)):
+        for j in range(len(etas)):
+            text = ax.text(j, i, f"{mse_matrix[i, j]:.2e}",
+                        ha="center", va="center", color="w")
+            
+    ax.set_ylabel("Lambdas", fontsize=12)
+    ax.set_xlabel("Etas", fontsize=12)
+    ax.set_title("Mean Squared Error (MSE) for Different Lambda Values and Etas", fontsize=12)
+    plt.colorbar(im)
+    plt.show()
