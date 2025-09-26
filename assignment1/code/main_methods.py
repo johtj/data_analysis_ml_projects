@@ -283,7 +283,7 @@ def sklearn_lasso_regression(X, y, alpha, use_intercept, max_iterations, toleran
             
     tolerance: float
         tolerance for convergence stopping criteria
-            
+    
     verbose : Bool
         Include verbose output from function, default set to false
     """

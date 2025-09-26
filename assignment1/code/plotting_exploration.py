@@ -149,8 +149,9 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
     mse_test = list()
     r2_train = list()
     r2_test = list()
+    thetas = list() # thetas for polynomial degrees for plotting
 
-    for degree in range(1, p+1):
+    for degree in range(1, p):#+1):
         polynomial_degree.append(degree)
 
         # Extract the relevant columns from design matrix for the current degree
@@ -161,6 +162,7 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
         theta_OLS = OLS_parameters(X_train_sliced, y_train)
         y_tilde_train = X_train_sliced @ theta_OLS
         y_tilde_test = X_test_sliced @ theta_OLS
+        thetas.append(theta_OLS)
 
         # Calculate MSE for training and test data
         mse_train_OLS = MSE(y_train, y_tilde_train)
@@ -188,12 +190,13 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
         if verbose:
             print(f"Polynomial degree: {degree}, Sklearn test R2: {r2_sklearn}, Sklearn test MSE: {mse_sklearn}")
             print(f"Polynomial degree: {degree}, R2 test: Own - sklearn {r2_test_OLS - r2_sklearn}, MSE test: Own - sklearn {mse_test_OLS - mse_sklearn}")
+            print(f"Polynomial degree: {degree}, Coef: {model.coef_}, intercept: {model.intercept_}")
             print('\n') # just to add line shift between different degrees in output
         
-    return polynomial_degree, mse_train, mse_test, r2_train, r2_test
+    return polynomial_degree, mse_train, mse_test, r2_train, r2_test, thetas
 
 
-def explore_lambda(X_train, X_test, y_train, y_test, lambdas ,verbose=False):
+def explore_lambda(X_train, X_test, y_train, y_test, lambdas, verbose=False):
     """
     Explores the effect of polynomial degree on MSE and R2 for
     both training and test datasets using Ridge regression.
@@ -238,19 +241,20 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas ,verbose=False):
    
     """
 
-    lambdas = []
+    lambdas_list = []
     mse_train = []
     mse_test = []
     r2_train  = []
     r2_test = []
 
-    
     for l in lambdas:
 
         # Apply ridge regression
         theta_ridge = Ridge_parameters(X_train, y_train,l)
         y_tilde_train = X_train @ theta_ridge
         y_tilde_test = X_test @ theta_ridge
+        if verbose: print(f"Ridge: Lambda: {l}, Coef: {theta_ridge} NO INTERCEPT?")
+
 
         # Calculate MSE for training and test data
         mse_train_ridge = MSE(y_train, y_tilde_train)
@@ -264,11 +268,9 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas ,verbose=False):
         r2_test_ridge = R2(y_test, y_tilde_test)
         r2_train.append(r2_train_ridge)
         r2_test.append(r2_test_ridge)
-        if verbose: print(f"Lambda: {l}, R2_train_ridge: {r2_train_ridge}, R2_test_ridge: {r2_test_ridge}")
+        if verbose: print(f"Lambda: {l}, R2_train_ridge: {r2_train_ridge}, R2_test_ridge: {r2_test_ridge} \n")
 
-
-    
-    return lambdas, mse_train, mse_test, r2_train, r2_test
+    return lambdas_list, mse_train, mse_test, r2_train, r2_test
 
 
 
@@ -369,22 +371,18 @@ def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, 
     mse_test_lasso = MSE(y_test, y_tilde_test)
     mse_train.append(mse_train_lasso)
     mse_test.append(mse_test_lasso)
-    if verbose: print(f"Lambda: {lambda_}, MSE_train_lasso: {mse_train_lasso}, MSE_test_lasso: {mse_test_lasso}")
+    if verbose: print(f"Lasso: Lambda: {lambda_}, MSE_train_lasso: {mse_train_lasso}, MSE_test_lasso: {mse_test_lasso}")
     
     # Calculate R2 for training and test data
     r2_train_lasso = R2(y_train, y_tilde_train)
     r2_test_lasso = R2(y_test, y_tilde_test)
     r2_train.append(r2_train_lasso)
     r2_test.append(r2_test_lasso)
-    if verbose: print(f"Lambda: {lambda_}, R2_train_lasso: {r2_train_lasso}, R2_test_lsso: {r2_test_lasso}")
+    if verbose: print(f"Lasso: Lambda: {lambda_}, R2_train_lasso: {r2_train_lasso}, R2_test_lsso: {r2_test_lasso}")
 
     if verbose:
-        print('Own implementation Lasso')
-        print(best_lasso['lambda'])
-        print(best_lasso['learning_rate'])
-        print(best_lasso['mse'])
-        print(best_lasso['coef'], best_lasso['intercept'])
-        print('\n')
+        print(f"Lasso own implementation best result: Lambda: {best_lasso['lambda']}, Learning rate: {best_lasso['learning_rate']}, MSE: {best_lasso['mse']}")
+        print(f"Lasso coef: {best_lasso['coef']}, intercept: {best_lasso['intercept']}")
 
     return best_lasso, mse_train, mse_test, r2_train, r2_test, mse_values
 
@@ -429,4 +427,34 @@ def plot_heatmap_lasso(mse_array, lambda_n, etas):
     ax.set_xlabel("Etas", fontsize=12)
     ax.set_title("Mean Squared Error (MSE) for Different Lambda Values and Etas", fontsize=12)
     plt.colorbar(im)
+    plt.show()
+
+
+def plot_theta_by_polynomials(thetas):
+    """
+    Plotting thetas as function of polynomial degree
+
+    Returns
+    -------
+    None
+        
+    Parameters
+    ----------
+    thetas: list
+        with values of theta for each polynomial degree analysed
+    """
+
+    for i, theta in enumerate(thetas):
+
+        plt.plot(range(len(theta)), theta, label=f'Polynomial degree {i + 1}')
+    
+    plt.xlabel('Polynomial degree')
+    plt.ylabel('Theta Value')
+    plt.title('Theta Values by polynomial degree')
+    
+    # Place legend outside the plot area to the right
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    
+    plt.grid(True)
+    plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space on the right for the legend
     plt.show()
