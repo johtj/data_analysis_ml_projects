@@ -1,8 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
+from sklearn.utils import resample
 from main_methods import OLS_parameters,Ridge_parameters
-from errors import MSE,R2
+from errors import MSE,R2, squared_bias, variance
 
 def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=False):
     """
@@ -269,3 +273,87 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambd,n=50,verbose=False):
 
     
     return lambdas, mse_train, mse_test, r2_train, r2_test
+
+
+def plot_bias_variance_tradeoff_polynomial_degree_sklearn(x, y, p=65, bootstraps=200):
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        x[:, None], y, random_state=1, test_size=0.2
+    )
+
+    degrees = np.arange(1, p + 1, step=5)
+
+    mses = np.zeros(degrees.shape)
+    variances = np.zeros(degrees.shape)
+    biases = np.zeros(degrees.shape)
+
+    for i, degree in enumerate(degrees):
+        model = make_pipeline(
+            PolynomialFeatures(degree=degree),
+            LinearRegression(fit_intercept=True)
+        )
+
+        preds = []  # will hold predictions on x_test for each bootstrap (shape per item: (n_test,))
+        for j in range(bootstraps):
+            x_train_re, y_train_re = resample(
+                x_train, y_train,
+                random_state=j
+            )
+
+            model.fit(x_train_re, y_train_re)
+            preds.append(model.predict(x_test))  # (n_test,)
+
+        # Stack to shape (n_test, bootstraps)
+        preds = np.column_stack(preds)
+
+        mses[i] = MSE(y_test[:, None], preds)
+        variances[i] = variance(preds)
+        biases[i] = squared_bias(y_test, preds)
+
+    plt.plot(degrees, mses, label="MSE (test)")
+    plt.plot(degrees, variances, label="Variance (test)")
+    plt.plot(degrees, biases, label="Bias^2 (test)")
+    plt.legend()
+    plt.yscale("log")
+    plt.show()
+
+def plot_bias_variance_tradeoff_datapoints(x, y, max_n=500, degree=20, bootstraps = 200):
+    """
+    Plots MSE, bias and variance for different numbers of datapoints (bias-variance tradeoff)
+    """
+    x_train, x_test, y_train, y_test = train_test_split(
+        x[:, None], y, random_state=1, test_size=0.2
+    )
+
+    n_test = np.linspace(10, max_n, 10).astype(int)
+
+    mses = np.zeros(n_test.shape)
+    variances = np.zeros(n_test.shape)
+    biases = np.zeros(n_test.shape)
+
+    for i, n in enumerate(n_test): # loop through the data points
+        # initialize predictions
+        predictions = np.empty((y_test.shape[0], bootstraps))
+
+        # Combine x transformation and model 
+        model = make_pipeline(PolynomialFeatures(degree=degree), LinearRegression(fit_intercept=True))
+
+        for b in range(bootstraps):
+            X_train_re, y_train_re = resample(x_train, y_train, n_samples=n) # bootstrap resampling, taking 
+
+            # fit your model on the sampled data
+            # make predictions on the test data
+            predictions[:,b] = model.fit(X_train_re, y_train_re).predict(x_test) # Evaluate the new model on the same test data each time.
+
+        
+        biases[i] = squared_bias(y_test, predictions)
+        variances[i] = variance(predictions)
+        mses[i] = MSE(y_test[:, None], predictions)
+
+    plt.plot(n_test, mses, label="MSE (test)")
+    plt.plot(n_test, variances, label="Variance (test)")
+    plt.plot(n_test, biases, label="Bias^2 (test)")
+    plt.legend()
+    plt.yscale("log")
+    plt.xlabel("Number of datapoints")
+    plt.show()

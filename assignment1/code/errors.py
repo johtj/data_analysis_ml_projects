@@ -48,3 +48,45 @@ def R2(y, y_predict):
     r2 = 1 - (ss_res / ss_tot)
     return r2
 
+
+def variance(y_predict):
+    """"
+    Calculates the variance of the predicted values
+
+    Returns
+    -------
+
+    variance: float
+        Variance value
+    
+    Parameters
+    ----------
+
+    y_predict: numpy array shape (n)
+        Predicted y values of the data set.
+    """
+
+    variance = np.mean(np.var(y_predict, axis=1))
+    return variance
+
+def squared_bias(y, y_predict):
+    """"
+    Calculates the squared bias between true and predicted values. Squaring bias so it is better for plotting.
+
+    Returns
+    -------
+
+    squared_bias: float
+        Bias value
+    
+    Parameters
+    ----------
+    y : numpy array shape (n)
+    Y values of the data set. 
+    
+    y_predict: numpy array shape (n)
+        Predicted y values of the data set.
+    """
+
+    squared_bias = np.mean((y - np.mean(y_predict, axis=1))**2)
+    return squared_bias
