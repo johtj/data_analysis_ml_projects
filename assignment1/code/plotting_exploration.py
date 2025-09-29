@@ -248,6 +248,7 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas, verbose=False):
     r2_test = []
 
     for l in lambdas:
+        lambdas_list.append(l)
 
         # Apply ridge regression
         theta_ridge = Ridge_parameters(X_train, y_train,l)
