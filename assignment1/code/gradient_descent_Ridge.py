@@ -1,4 +1,6 @@
-def gradient_descent_ridge(X,y,eta,lam,num_iters,n_features):
+import numpy as np
+
+def gradient_descent_ridge(X,y,eta,lam,num_iters):
     """
         Calculates the optimal parameters, theta, using the 
         ridge regression and gradient descent
@@ -26,13 +28,10 @@ def gradient_descent_ridge(X,y,eta,lam,num_iters,n_features):
         
         num_iters : int
             number of iterations
-
-        n_features : int
-            number of features in feature matrix
     """
 
     # Initialize weights for gradient descent
-    theta_gdRidge = np.zeros(n_features)
+    theta_gdRidge = np.zeros(np.shape(X)[1])
     n = X.shape[0]
 
     # Gradient descent loop
@@ -46,7 +45,7 @@ def gradient_descent_ridge(X,y,eta,lam,num_iters,n_features):
     # After the loop, theta contains the fitted coefficients
     return theta_gdRidge
 
-def gradient_descent_ridge_momentum(X,y,eta,lam,num_iters,n_features, momentum ):
+def gradient_descent_ridge_momentum(X,y,eta,lam,num_iters, momentum ):
     """
         Calculates the optimal parameters, theta, using the 
         ridge regression and gradient descent
@@ -75,12 +74,11 @@ def gradient_descent_ridge_momentum(X,y,eta,lam,num_iters,n_features, momentum )
         num_iters : int
             number of iterations
 
-        n_features : int
-            number of features in feature matrix
-    """
+    
+        """
 
     # Initialize weights for gradient descent
-    theta_gdRidge = np.zeros(n_features)
+    theta_gdRidge = np.zeros(np.shape(X)[1])
     n = X.shape[0]
     change = 0.0
 
@@ -100,7 +98,7 @@ def gradient_descent_ridge_momentum(X,y,eta,lam,num_iters,n_features, momentum )
     # After the loop, theta contains the fitted coefficients
     return theta_gdRidge
 
-def ADAgrad_Ridge(X,y,eta,num_iters,n_features):
+def ADAgrad_Ridge(X,y,eta,num_iters):
     '''
     glob_eta = 0
     initial_theta = 0 
@@ -116,7 +114,7 @@ def ADAgrad_Ridge(X,y,eta,num_iters,n_features):
 
     '''
     # Initialize weights for gradient descent
-    theta_gdRidge = np.zeros(n_features) #initial theta
+    theta_gdRidge = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     r = 0 #gradient accumulation variable
     delta = np.power(10,-7)
@@ -138,7 +136,7 @@ def ADAgrad_Ridge(X,y,eta,num_iters,n_features):
 
     return theta_gdRidge
 
-def RMSprop_Ridge(X,y,eta,num_iters,n_features):
+def RMSprop_Ridge(X,y,eta,num_iters):
     '''
     global_eta = 0
     decay_rate = 0
@@ -154,7 +152,7 @@ def RMSprop_Ridge(X,y,eta,num_iters,n_features):
         apply theta = theta + update
     '''
         # Initialize weights for gradient descent
-    theta_ridge = np.zeros(n_features) #initial theta
+    theta_ridge = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     decay_rate = 0
     r = 0 #gradient accumulation variable
@@ -177,7 +175,7 @@ def RMSprop_Ridge(X,y,eta,num_iters,n_features):
 
     return theta_ridge
 
-def ADAM_Ridge(X,y,eta,num_iters,n_features):
+def ADAM_Ridge(X,y,eta,num_iters):
     '''
     eta = 0.001 (suggested default)
     decay1 = 0.9 
@@ -201,7 +199,7 @@ def ADAM_Ridge(X,y,eta,num_iters,n_features):
         apply update theta = theta + update  
     '''
             # Initialize weights for gradient descent
-    theta_Ridge = np.zeros(n_features) #initial theta
+    theta_Ridge = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     decay1= 0.9
     decay2 = 0.999

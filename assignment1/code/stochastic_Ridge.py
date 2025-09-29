@@ -1,6 +1,6 @@
 import numpy as np
 
-def stochastic_GD_OLS(X,y,n,M,n_epochs,eta):
+def stochastic_GD_Ridge(X,y,n,M,n_epochs,eta,lam):
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -20,15 +20,15 @@ def stochastic_GD_OLS(X,y,n,M,n_epochs,eta):
             y_batch = y_shuffled[start_i:end_i]
             n_batch = len(X_batch)
             #calculate gradients
-            grad_OLS_batch = (2.0/n_batch)*X_batch.T @ (X_batch @ theta - y_batch)
             
+            grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta            
             #update theta
-            theta -= grad_OLS_batch*eta
+            theta -= grad*eta
 
     return theta
 
 
-def SGD_OLS_momentum(X,y,n,M,n_epochs,eta,momentum):
+def SGD_Ridge_momentum(X,y,n,M,n_epochs,eta,lam,momentum):
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -49,7 +49,7 @@ def SGD_OLS_momentum(X,y,n,M,n_epochs,eta,momentum):
             y_batch = y_shuffled[start_i:end_i]
             n_batch = len(X_batch)
     
-            grad = (2.0/n_batch)*X_batch.T @ (X_batch @ theta - y_batch)
+            grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta
 
             update = eta * grad + momentum*change
 
@@ -61,12 +61,9 @@ def SGD_OLS_momentum(X,y,n,M,n_epochs,eta,momentum):
 
     return theta
 
-    # Initialize weights for gradient descent
-    theta_gdOLS = np.zeros(n_features)
-    change = 0.0
-    n = X.shape[0]
+    
 
-def SGD_OLS_ADAgrad(X,y,n,M,n_epochs,eta):
+def SGD_Ridge_ADAgrad(X,y,n,M,n_epochs,eta,lam):
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -90,7 +87,7 @@ def SGD_OLS_ADAgrad(X,y,n,M,n_epochs,eta):
             n_batch = len(X_batch)
 
             # Compute gradients for OSL
-            grad = (2.0/n_batch)*X_batch.T @ (X_batch @ theta - y_batch)
+            grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta
 
             #accumulate squared gradient 
             r = r + (grad * grad)
@@ -103,7 +100,7 @@ def SGD_OLS_ADAgrad(X,y,n,M,n_epochs,eta):
 
     return theta
 
-def SGD_OLS_RMSprop(X,y,n,M,n_epochs,eta):
+def SGD_Ridge_RMSprop(X,y,n,M,n_epochs,eta,lam):
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -128,7 +125,7 @@ def SGD_OLS_RMSprop(X,y,n,M,n_epochs,eta):
             y_batch = y_shuffled[start_i:end_i]
             n_batch = len(X_batch)
         
-            grad = (2.0/n_batch)*X_batch.T @ (X_batch @ theta - y_batch)
+            grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta
 
             #accumulate squared gradient 
             r = decay_rate * r + (1-decay_rate) * (grad * grad)
@@ -142,7 +139,7 @@ def SGD_OLS_RMSprop(X,y,n,M,n_epochs,eta):
 
     return theta
 
-def SGD_OLS_ADAM(X,y,n,M,n_epochs,eta):
+def SGD_Ridge_ADAM(X,y,n,M,n_epochs,eta,lam):
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -169,7 +166,7 @@ def SGD_OLS_ADAM(X,y,n,M,n_epochs,eta):
             n_batch = len(X_batch)
         
             # Compute gradients for OSL
-            grad = (2.0/n_batch)*X_batch.T @ (X_batch @ theta - y_batch)
+            grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta
             ts += 1
 
             s = decay1 * s  + (1-decay1)*grad  
@@ -181,8 +178,7 @@ def SGD_OLS_ADAM(X,y,n,M,n_epochs,eta):
             update = -eta*(s_debias/np.sqrt(r_debias)+delta)
             
             # Update parameters theta
-            theta_gdOLS += update
+            theta_gdRidge += update
 
 
     return theta
-

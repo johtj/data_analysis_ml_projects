@@ -34,7 +34,7 @@ def gradient_descent_OLS(X,y,eta,num_iters,n_features):
     """
     
     # Initialize weights for gradient descent
-    theta_gdOLS = np.zeros(n_features)
+    theta_gdOLS = np.zeros(np.shape(X)[1])
     n = X.shape[0]
 
     # Gradient descent loop
@@ -83,7 +83,7 @@ def gradient_descent_OLS_momentum(X,y,eta,num_iters,n_features,momentum):
     """
     
     # Initialize weights for gradient descent
-    theta_gdOLS = np.zeros(n_features)
+    theta_gdOLS = np.zeros(np.shape(X)[1])
     change = 0.0
     n = X.shape[0]
 
@@ -119,7 +119,7 @@ def ADAgrad_OLS(X,y,eta,num_iters,n_features):
 
     '''
     # Initialize weights for gradient descent
-    theta_gdOLS = np.zeros(n_features) #initial theta
+    theta_gdOLS = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     r = 0 #gradient accumulation variable
     delta = np.power(10,-7)
@@ -157,7 +157,7 @@ def RMSprop_OLS(X,y,eta,num_iters,n_features):
         apply theta = theta + update
     '''
         # Initialize weights for gradient descent
-    theta_gdOLS = np.zeros(n_features) #initial theta
+    theta_gdOLS = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     decay_rate = 0
     r = 0 #gradient accumulation variable
@@ -204,7 +204,7 @@ def ADAM(X,y,eta,num_iters,n_features):
         apply update theta = theta + update  
     '''
             # Initialize weights for gradient descent
-    theta_gdOLS = np.zeros(n_features) #initial theta
+    theta_gdOLS = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     decay1= 0.9
     decay2 = 0.999
@@ -218,6 +218,7 @@ def ADAM(X,y,eta,num_iters,n_features):
 
         # Compute gradients for OSL
         grad_OLS = (2.0/n)*X.T @ (X @ theta_gdOLS - y)
+        ts += 1
 
         s = decay1 * s  + (1-decay1)*grad_OLS  
         r = decay2*r + (1-decay2)*grad_OLS
