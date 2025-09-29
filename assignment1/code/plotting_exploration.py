@@ -151,12 +151,12 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
     r2_test = list()
     thetas = list() # thetas for polynomial degrees for plotting
 
-    for degree in range(1, p):#+1):
+    for degree in range(1, p+1):
         polynomial_degree.append(degree)
 
         # Extract the relevant columns from design matrix for the current degree
-        X_train_sliced = X_train[:, :degree] 
-        X_test_sliced = X_test[:, :degree]
+        X_train_sliced = X_train[:, :degree+1] 
+        X_test_sliced = X_test[:, :degree+1]
         
         # OLS Regression
         theta_OLS = OLS_parameters(X_train_sliced, y_train)
@@ -192,7 +192,7 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
             print(f"Polynomial degree: {degree}, R2 test: Own - sklearn {r2_test_OLS - r2_sklearn}, MSE test: Own - sklearn {mse_test_OLS - mse_sklearn}")
             print(f"Polynomial degree: {degree}, Coef: {model.coef_}, intercept: {model.intercept_}")
             print('\n') # just to add line shift between different degrees in output
-        
+    
     return polynomial_degree, mse_train, mse_test, r2_train, r2_test, thetas
 
 
@@ -254,7 +254,7 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas, verbose=False):
         theta_ridge = Ridge_parameters(X_train, y_train,l)
         y_tilde_train = X_train @ theta_ridge
         y_tilde_test = X_test @ theta_ridge
-        if verbose: print(f"Ridge: Lambda: {l}, Coef: {theta_ridge} NO INTERCEPT?")
+        if verbose: print(f"Ridge: Lambda: {l}, Coef: {theta_ridge}")
 
 
         # Calculate MSE for training and test data
@@ -271,7 +271,7 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas, verbose=False):
         r2_test.append(r2_test_ridge)
         if verbose: print(f"Lambda: {l}, R2_train_ridge: {r2_train_ridge}, R2_test_ridge: {r2_test_ridge} \n")
 
-    return lambdas_list, mse_train, mse_test, r2_train, r2_test
+    return lambdas_list, mse_train, mse_test, r2_train, r2_test, theta_ridge
 
 
 
@@ -444,14 +444,12 @@ def plot_theta_by_polynomials(thetas):
     thetas: list
         with values of theta for each polynomial degree analysed
     """
-
     for i, theta in enumerate(thetas):
-
         plt.plot(range(len(theta)), theta, label=f'Polynomial degree {i + 1}')
     
     plt.xlabel('Polynomial degree')
     plt.ylabel('Theta Value')
-    plt.title('Theta Values by polynomial degree')
+    plt.title('Theta Values by polynomial degree - OLS regression')
     
     # Place legend outside the plot area to the right
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -459,3 +457,71 @@ def plot_theta_by_polynomials(thetas):
     plt.grid(True)
     plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space on the right for the legend
     plt.show()
+
+
+
+
+
+
+def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise):
+    """
+    Plot x, y, x_train, y_train and x_test with predicted y_values at original scale.
+    Plots are shown with variables as n_datapoints, regression_method, poly_degree and noise
+
+    Returns
+    -------
+    Saved figure
+        
+    Parameters
+    ----------
+    x : numpy array shape (n)
+        x values of function without noise
+    
+    y : numpy array shape (n)
+        y values of function without noise
+    
+    x_noise : numpy array shape (n)
+        x values of function with noise
+    
+    y_noise : numpy array shape (n)
+        y values of function with noise
+
+    y_predicted_rescaled : numpy array shape (n)
+        Predicted y values at original scale
+
+    x_test : numpy array shape (n)
+        x values of test dataset
+
+    n_datapoints : int
+        variable used for plotting of n_datapoints in regression
+
+    regression_method : string
+        String for regression method in plot
+    
+    n_datapoints : int
+        variable used for plotting of n_datapoints in regression
+
+    poly_degree : int
+        variable used for plotting of poly_degree in regression
+
+    noise : bool
+        decide if noise or without noise should be in the plot
+    """
+    plt.figure(figsize=(12, 6))
+    plt.plot(x,y, marker='o', color='blue', label='Runges function - no noise')
+    plt.scatter(x_train, y_train, marker='o', color='green', label='Runges function - training data')
+    plt.scatter(x_test, y_predicted_rescaled, marker='o', color='red', label='Runges function - predicted and rescaled')
+    plt.legend()
+    if noise:
+        text = f'Runges function with {regression_method} regression with noise\nNumber of data points: {n_datapoints} and polynomial degree: {poly_degree}'
+        filename = f'Runges function with {regression_method} regression with noise - Number of data points: {n_datapoints} and polynomial degree - {poly_degree}.png'
+        plt.title(text)
+    else:
+        text = f'Runges function with {regression_method} regression without noise\nNumber of data points: {n_datapoints} and polynomial degree: {poly_degree}'
+        filename = f'Runges function with {regression_method} regression without noise - Number of data points: {n_datapoints} and polynomial degree - {poly_degree}.png'
+        plt.title(text)
+    plt.xlabel('X values')
+    plt.ylabel('Y values')
+    plt.savefig(filename)
+    plt.show()
+    plt.close()

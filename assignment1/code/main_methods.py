@@ -291,3 +291,95 @@ def sklearn_lasso_regression(X, y, alpha, use_intercept, max_iterations, toleran
     RegLasso = Lasso(alpha, fit_intercept=use_intercept, max_iter=max_iterations, tol=tolerance)
     RegLasso.fit(X, y)
     if verbose: print(f"Sklearn coef: {RegLasso.coef_}, Sklearn intercept: {RegLasso.intercept_}")
+
+
+def rescale_theta_intercept(coef_scaled, intercept_scaled, y_train_std, y_train_mean, X_train_std, X_train_mean, verbose):
+    """
+    Rescales theta and intercept back to original values
+
+    Returns
+    -------
+    rescaled_intercept : float
+        intercept at original scale
+
+    rescaled_coef : numpy array shape (n)
+        coefficients at original scale
+        
+    Parameters
+    ----------
+    coef_scaled : numpy array shape (n)
+        scaled coefficients
+
+    intercept_scaled : float
+        scaled intercept
+    
+    y_train_std : float
+        standard deviation of y_train
+
+    y_train_mean : float
+        mean of y_train
+
+    X_train_std : float
+        standard deviation of X_train
+
+    X_train_mean : float
+        mean of X_train
+
+    verbose : Bool
+        Include verbose output from function, default set to false
+    """
+    # Rescale coefficients
+    rescaled_coef = [
+        coef_scaled[i] * (y_train_std / X_train_std[i])
+        for i in range(len(coef_scaled))
+    ]
+    rescaled_coef = np.array(rescaled_coef)
+    # Rescale intercept
+    rescaled_intercept = intercept_scaled * y_train_std + y_train_mean - np.sum(rescaled_coef[i] * X_train_mean[i] for i in range(len(rescaled_coef)))
+
+    if verbose: print(f'Rescaled sklearn coef and interceot with own code\n Rescaled coef: {rescaled_coef}, rescaled intercept {rescaled_intercept}')
+
+    return rescaled_coef, rescaled_intercept
+
+
+def predict_y(X, theta):
+    """
+    Predicts y values from design matrix and theta
+
+    Returns
+    -------
+    y_predict : numpy array shape (n)
+        Predicted y values
+        
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    theta :  numpy array shape (n)
+        coefficients for regression
+    """
+    return X @ theta
+
+def rescale_y(predicted_y_scaled, y_train_std, y_train_mean):
+    """
+    Scales y values from scaled to original values
+
+    Returns
+    -------
+    y_predict_rescaled : numpy array shape (n)
+        Predicted y values at original values
+        
+    Parameters
+    ----------
+    predicted_y_scaled : numpy array shape (n)
+        Predicted y values - scaled
+    
+    y_train_std : float
+        standard deviation of y_train
+
+    y_train_mean : float
+        mean of y_train
+    """
+    return predicted_y_scaled * y_train_std + y_train_mean
