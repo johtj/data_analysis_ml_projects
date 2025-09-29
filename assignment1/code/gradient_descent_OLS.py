@@ -48,6 +48,7 @@ def gradient_descent_OLS(X,y,eta,num_iters,n_features):
     # After the loop, theta contains the fitted coefficients
     return theta_gdOLS
 
+
 def gradient_descent_OLS_momentum(X,y,eta,num_iters,n_features,momentum):
     """
         Calculates the optimal parameters, theta, using the 
