@@ -405,7 +405,7 @@ def plot_heatmap_lasso(mse_array, lambda_n, etas):
         array with mse values 
 
     lambdas_n : int
-        number of lamda values explored
+        number of lamda values explored, regularization parameter
 
     etas : list
         eta (learning rate) values explored
@@ -425,13 +425,13 @@ def plot_heatmap_lasso(mse_array, lambda_n, etas):
                         ha="center", va="center", color="w")
             
     ax.set_ylabel("Lambdas", fontsize=12)
-    ax.set_xlabel("Etas", fontsize=12)
-    ax.set_title("Mean Squared Error (MSE) for Different Lambda Values and Etas", fontsize=12)
+    ax.set_xlabel("learning rate", fontsize=12)
+    ax.set_title("Mean Squared Error (MSE) for different lambda values and learning rate", fontsize=12)
     plt.colorbar(im)
     plt.show()
 
 
-def plot_theta_by_polynomials(thetas):
+def plot_theta_by_polynomials(thetas, degree):
     """
     Plotting thetas as function of polynomial degree
 
@@ -443,20 +443,25 @@ def plot_theta_by_polynomials(thetas):
     ----------
     thetas: list
         with values of theta for each polynomial degree analysed
+
+    degree : int
+        Polynomial degree used in analysis
     """
     for i, theta in enumerate(thetas):
         plt.plot(range(len(theta)), theta, label=f'Polynomial degree {i + 1}')
     
-    plt.xlabel('Polynomial degree')
+    plt.xlabel('Degree')
     plt.ylabel('Theta Value')
-    plt.title('Theta Values by polynomial degree - OLS regression')
+    plt.title('Theta values by polynomial degree {degree} - OLS regression')
     
     # Place legend outside the plot area to the right
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     
     plt.grid(True)
     plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space on the right for the legend
+    plt.savefig(f'Theta values by polynomial degree {degree} - OLS regression')
     plt.show()
+    plt.close()
 
 
 
@@ -513,12 +518,12 @@ def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_t
     plt.scatter(x_test, y_predicted_rescaled, marker='o', color='red', label='Runges function - predicted and rescaled')
     plt.legend()
     if noise:
-        text = f'Runges function with {regression_method} regression with noise\nNumber of data points: {n_datapoints} and polynomial degree: {poly_degree}'
-        filename = f'Runges function with {regression_method} regression with noise - Number of data points: {n_datapoints} and polynomial degree - {poly_degree}.png'
+        text = f'Runges function with {regression_method} regression with noise\nNumber of data points: {n_datapoints} Polynomial degree: {poly_degree}'
+        filename = f'Runges function with {regression_method} regression with noise - Number of data points: {n_datapoints} Polynomial degree - {poly_degree}.png'
         plt.title(text)
     else:
-        text = f'Runges function with {regression_method} regression without noise\nNumber of data points: {n_datapoints} and polynomial degree: {poly_degree}'
-        filename = f'Runges function with {regression_method} regression without noise - Number of data points: {n_datapoints} and polynomial degree - {poly_degree}.png'
+        text = f'Runges function with {regression_method} regression without noise\nNumber of data points: {n_datapoints} Polynomial degree: {poly_degree}'
+        filename = f'Runges function with {regression_method} regression without noise - Number of data points: {n_datapoints} Polynomial degree - {poly_degree}.png'
         plt.title(text)
     plt.xlabel('X values')
     plt.ylabel('Y values')
