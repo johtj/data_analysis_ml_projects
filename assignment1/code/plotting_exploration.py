@@ -114,7 +114,7 @@ def plot_r2(regression_method, degree, n_datapoints, x_axis_data, r2_train, r2_t
     plt.plot(x_axis_data, r2_train, label='R2 train')
     plt.plot(x_axis_data, r2_test, label='R2 test')
     plt.xlabel(x_axis_label)
-    plt.ylabel('Mean Squared Error')
+    plt.ylabel('R2')
     plt.legend()
     plt.savefig(filename, bbox_inches='tight')
     plt.show()
@@ -436,10 +436,12 @@ def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, 
 
 
 
-def plot_heatmap_lasso(mse_or_r2, mse_array, lambda_n, etas, degree, n_datapoints, n_iter):
+def plot_heatmap_lasso(mse_or_r2, mse_array, lambdas, etas, degree, n_datapoints, n_iter):
     """
     Plotting of heatmap from mse values from lasso_grid_search
     Depends on number of lambda values to explore and learning rate (etas)
+
+    Some minor help code contributions form Copilot for labeling axis correctly.
 
     Returns
     -------
@@ -453,8 +455,8 @@ def plot_heatmap_lasso(mse_or_r2, mse_array, lambda_n, etas, degree, n_datapoint
     mse_array : numpy array shape (n)
         array with mse values 
 
-    lambdas_n : int
-        number of lamda values explored, regularization parameter
+    lambdas : array
+        lambda values to explore
 
     etas : list
         eta (learning rate) values explored
@@ -468,19 +470,45 @@ def plot_heatmap_lasso(mse_or_r2, mse_array, lambda_n, etas, degree, n_datapoint
     n_iter : int
         number of iterations
     """
-
+    lambda_n = len(lambdas)
     mse_matrix = np.array(mse_array).reshape((lambda_n, len(etas)))
 
+    lambdas = np.asarray(lambdas)
+    etas = np.asarray(etas)
+
+    L = len(lambdas)
+    E = len(etas)
+    mse_matrix = np.array(mse_array).reshape((L, E))
+
     fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
-    im = ax.imshow(mse_matrix)
 
+    # Keep imshow in index space (so your text annotations still land correctly)
+    im = ax.imshow(mse_matrix, aspect='auto', origin='upper')
 
-    for i in range(0, (lambda_n)):
-        for j in range(len(etas)):
+    for i in range(0, (L)):
+        for j in range(E):
             #text = ax.text(j, i, f"{mse_matrix[i, j]:.2e}",
             text = ax.text(j, i, f"{mse_matrix[i, j]:.3f}",
-                        ha="center", va="center", color="w", fontsize = 8)
-            
+                        ha="center", va="center", color="black", fontsize = 12)
+
+    
+
+    # X-axis: all eta values
+    ax.set_xticks(range(E))
+    ax.set_xticklabels([f"{eta:.3f}" for eta in etas], rotation=45)
+
+    # Y-axis: all lambda values
+    ax.set_yticks(range(L))
+    ax.set_yticklabels([f"{lmbd:.3f}" for lmbd in lambdas])
+
+
+    # After imshow and before plt.show()
+    ax.set_xticks(range(E))
+    ax.set_xticklabels([f"{eta:.3f}" for eta in etas], rotation=45)
+
+    ax.set_yticks(range(L))
+    ax.set_yticklabels([f"{lmbd:.3f}" for lmbd in lambdas])
+
     ax.set_ylabel("Lambdas", fontsize=12)
     ax.set_xlabel("Learning rate", fontsize=12)
     ax.set_title(f"Heatmap Lasso regression with {mse_or_r2} - Number of lambdas {lambda_n} \nNumber of learning rate {len(etas)}\npolynomial degree {degree}\nNumber of datapoints {n_datapoints}\nNumber of iterations {n_iter}", fontsize=12)
@@ -578,21 +606,39 @@ def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_t
         number of iterations
     """
     plt.figure(figsize=(12, 6))
-    plt.plot(x,y, marker='o', color='blue', label='Runges function - no noise')
+    #plt.plot(x,y, marker='o', color='blue', label='Runges function')
+    plt.plot(x,y, color='blue', label='Runges function')
     plt.scatter(x_train, y_train, marker='o', color='green', label='Runges function - training data')
     plt.scatter(x_test, y_predicted_rescaled, marker='o', color='red', label='Runges function - predicted and rescaled')
     plt.legend()
-    if noise:                   
-        text = f'Runges function with {regression_method} regression with noise\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
-        filename = f'Runges function with {regression_method} regression with noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of learning rate{len(eta)} - Number of iterations {n_iter}.png'
-        plt.title(text)
+
+    if noise:
+        noise_text = "with"
     else:
-        text = f'Runges function with {regression_method} regression without noise\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
-        filename = f'Runges function with {regression_method} regression without noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of learning rate{len(eta)} - Number of iterations {n_iter}.png'
-        plt.title(text)
+        noise_text = "without"
+
+    if regression_method == "OLS":
+        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}'
+        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree}.png'
+    elif regression_method == "Ridge":
+        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}'
+        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas}.png'
+    elif regression_method == "Ridge-gradient":
+        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\nNumber of iterations: {n_iter}'
+        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of iterations {n_iter}.png'
+    elif regression_method == "Lasso":
+        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
+        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of learning rate{len(eta)} - Number of iterations {n_iter}.png'
+    else:
+        raise ValueError(f"Unknown regression method: {regression_method}")
+    
+    plt.title(text)
     plt.xlabel('X values')
     plt.ylabel('Y values')
     plt.tight_layout()
     plt.savefig(filename, bbox_inches='tight')
     plt.show()
     plt.close()
+
+
+
