@@ -39,8 +39,8 @@ def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=Fals
         text = f'MSE for Different {x_axis_label} without Noise\nNumber of data points: {n_datapoints}'
         filename = f'MSE for Different {x_axis_label} without Noise - Number of data points {n_datapoints}.png'
         plt.title(text)
-    plt.plot(x_axis, mse_train, label='MSE train')
-    plt.plot(x_axis, mse_test, label='MSE test')
+    plt.plot(x_axis, mse_train, 'o',label='MSE train')
+    plt.plot(x_axis, mse_test, 'o', label='MSE test')
     plt.xlabel(x_axis_label)
     plt.ylabel('Mean Squared Error')
     plt.legend()
