@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression
 from main_methods import OLS_parameters,Ridge_parameters, lasso_gradient_descent
 from errors import MSE,R2
 
-def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=False):
+def plot_mse(regression_method, degree,  n_datapoints, x_axis_data, mse_train, mse_test, noise=False):
     """
     Plots the Mean Squared Error (MSE) for different polynomial degrees.
     
@@ -15,7 +15,12 @@ def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=Fals
 
     Parameters
     ----------
+    regression_method : string
+        Type of regression for plotting
 
+    degree : int
+        number of polynomials in regression
+    
     n_datapoints : int
         number of data points
 
@@ -33,25 +38,33 @@ def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=Fals
     """
 
     if noise:
-        text = f'MSE for Different {x_axis_label} with Noise\nNumber of data points: {n_datapoints}'
-        filename = f'MSE for Different {x_axis_label} with Noise - Number of data points {n_datapoints}.png'
-        plt.title(text)
+        noise_text = "with"
     else:
-        text = f'MSE for Different {x_axis_label} without Noise\nNumber of data points: {n_datapoints}'
-        filename = f'MSE for Different {x_axis_label} without Noise - Number of data points {n_datapoints}.png'
-        plt.title(text)
-    plt.plot(x_axis, mse_train, label='MSE train')
-    plt.plot(x_axis, mse_test, label='MSE test')
+        noise_text = "without"
+    
+    if regression_method == "Ridge":
+        x_axis_label = f"Lambdas"
+        n_lambdas = len(x_axis_data)
+        text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        filename = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise - Number of lambdas {n_lambdas} - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
+    elif regression_method == "OLS":
+        x_axis_label = "Polynomial degree"
+        text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        filename = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
+
+    plt.title(text)  
+    plt.plot(x_axis_data, mse_train, label='MSE train')
+    plt.plot(x_axis_data, mse_test, label='MSE test')
     plt.xlabel(x_axis_label)
     plt.ylabel('Mean Squared Error')
     plt.legend()
-    plt.savefig(filename)
+    plt.savefig(filename, bbox_inches='tight')
     plt.show()
     plt.close()
 
 
 
-def plot_r2(n_datapoints, x_axis,x_axis_label, r2_train, r2_test, noise=False):
+def plot_r2(regression_method, degree, n_datapoints, x_axis_data, r2_train, r2_test, noise=False):
     """
     Plots the R2 Score for different polynomial degrees.
     
@@ -61,6 +74,11 @@ def plot_r2(n_datapoints, x_axis,x_axis_label, r2_train, r2_test, noise=False):
 
     Parameters
     ----------
+    regression_method : string
+        Type of regression for plotting
+    
+    degree : int
+        number of polynomials in regression
 
     n_datapoints : int
         number of data points
@@ -77,22 +95,47 @@ def plot_r2(n_datapoints, x_axis,x_axis_label, r2_train, r2_test, noise=False):
     noise : Bool
         Bool to determine if noise is included or not in dataset:
     """
-        
     if noise:
-        plt.title(f'R2 Score for Different {x_axis_label} with Noise\nNumber of data points: {n_datapoints}')
-        filename = f'R2 for Different {x_axis_label} with Noise - Number of data points {n_datapoints}.png'
+        noise_text = "with"
     else:
-        plt.title(f'R2 Score for Different {x_axis_label} without Noise\nNumber of data points: {n_datapoints}')
-        filename = f'R2 for Different {x_axis_label} without Noise - Number of data points {n_datapoints}.png'
-    plt.plot(x_axis, r2_train, label='R2 train')
-    plt.plot(x_axis, r2_test, label='R2 test')
+        noise_text = "without"
+    
+    if regression_method == "Ridge":
+        x_axis_label = f"Lambdas"
+        n_lambdas = len(x_axis_data)
+        text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        filename = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise - Number of lambdas {n_lambdas} - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
+    elif regression_method == "OLS":
+        x_axis_label = "Polynomial degree"
+        text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        filename = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
+
+    plt.title(text)  
+    plt.plot(x_axis_data, r2_train, label='R2 train')
+    plt.plot(x_axis_data, r2_test, label='R2 test')
+    plt.xlabel(x_axis_label)
+    plt.ylabel('Mean Squared Error')
+    plt.legend()
+    plt.savefig(filename, bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+    """
+    if noise:
+        plt.title(f'{regression_method} - R2 Score for Different {x_axis_label} with Noise\nNumber of data points: {n_datapoints}')
+        filename = f'{regression_method} - R2 for Different {x_axis_label} with Noise - Number of data points {n_datapoints}.png'
+    else:
+        plt.title(f'{regression_method} - R2 Score for Different {x_axis_label} without Noise\nNumber of data points: {n_datapoints}')
+        filename = f'{regression_method} - R2 for Different {x_axis_label} without Noise - Number of data points {n_datapoints}.png'
+    plt.plot(x_axis_data, r2_train, label='R2 train')
+    plt.plot(x_axis_data, r2_test, label='R2 test')
     plt.xlabel(x_axis_label)
     plt.ylabel('R2 Score')
     plt.legend()
     plt.savefig(filename)
     plt.show()
     plt.close()
-
+    """
 
 def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept, verbose=False):
     """
@@ -393,7 +436,7 @@ def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, 
 
 
 
-def plot_heatmap_lasso(mse_array, lambda_n, etas):
+def plot_heatmap_lasso(mse_or_r2, mse_array, lambda_n, etas, degree, n_datapoints, n_iter):
     """
     Plotting of heatmap from mse values from lasso_grid_search
     Depends on number of lambda values to explore and learning rate (etas)
@@ -404,6 +447,9 @@ def plot_heatmap_lasso(mse_array, lambda_n, etas):
         
     Parameters
     ----------
+    mse_or_r2 : string
+        type of metric
+
     mse_array : numpy array shape (n)
         array with mse values 
 
@@ -412,29 +458,39 @@ def plot_heatmap_lasso(mse_array, lambda_n, etas):
 
     etas : list
         eta (learning rate) values explored
+
+    degree : int
+        polynomial degree
+
+    n_datapoints : int
+        number of datapoints in regression
+
+    n_iter : int
+        number of iterations
     """
 
     mse_matrix = np.array(mse_array).reshape((lambda_n, len(etas)))
 
-    plt.figure(figsize=(6,4))
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
     im = ax.imshow(mse_matrix)
+
 
     for i in range(0, (lambda_n)):
         for j in range(len(etas)):
-            text = ax.text(j, i, f"{mse_matrix[i, j]:.2e}",
-                        ha="center", va="center", color="w")
+            #text = ax.text(j, i, f"{mse_matrix[i, j]:.2e}",
+            text = ax.text(j, i, f"{mse_matrix[i, j]:.3f}",
+                        ha="center", va="center", color="w", fontsize = 8)
             
     ax.set_ylabel("Lambdas", fontsize=12)
     ax.set_xlabel("Learning rate", fontsize=12)
-    ax.set_title("Mean Squared Error (MSE) for different lambda values and learning rate", fontsize=12)
+    ax.set_title(f"Heatmap Lasso regression with {mse_or_r2} - Number of lambdas {lambda_n} \nNumber of learning rate {len(etas)}\npolynomial degree {degree}\nNumber of datapoints {n_datapoints}\nNumber of iterations {n_iter}", fontsize=12)
     plt.colorbar(im)
-    plt.savefig(f'Heatmap Lasso regression - Number of lambdas {lambda_n} number of learning rate {len(etas)}.png')
+    plt.savefig(f'Heatmap Lasso regression with {mse_or_r2} - Number of lambdas {lambda_n} number of learning rate {len(etas)} - polynomial degree {degree} - datapoints {n_datapoints} - Number of iterations {n_iter}.png', bbox_inches='tight')
     plt.show()
     plt.close()
 
 
-def plot_theta_by_polynomials(thetas, degree):
+def plot_theta_by_polynomials(thetas, degree, n_datapoints):
     """
     Plotting thetas as function of polynomial degree
 
@@ -449,29 +505,26 @@ def plot_theta_by_polynomials(thetas, degree):
 
     degree : int
         Polynomial degree used in analysis
+
+    n_datapoints : int
+        number of datapoints in regression
     """
     for i, theta in enumerate(thetas):
-        plt.plot(range(len(theta)), theta, label=f'Polynomial degree {i + 1}')
+        plt.plot(range(len(theta)), theta, label=f'Degree {i + 1}')
     
     plt.xlabel('Degree')
     plt.ylabel('Theta Value')
-    plt.title('Theta values by polynomial degree {degree} - OLS regression')
-    
-    # Place legend outside the plot area to the right
+    plt.title(f'Theta values by polynomial degree {degree} - OLS regression\nDatapoints {n_datapoints}')
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    
-    plt.grid(True)
-    plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space on the right for the legend
-    plt.savefig(f'Theta values by polynomial degree {degree} - OLS regression')
+    plt.tight_layout(rect=[0, 0, 0.85, 1])  
+    plt.savefig(f'Theta values by polynomial degree {degree} - OLS regression - Datapoints {n_datapoints}', bbox_inches='tight')
     plt.show()
     plt.close()
 
 
 
+def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise, n_lambdas, eta, n_iter):
 
-
-
-def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise):
     """
     Plot x, y, x_train, y_train and x_test with predicted y_values at original scale.
     Plots are shown with variables as n_datapoints, regression_method, poly_degree and noise
@@ -514,22 +567,32 @@ def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_t
 
     noise : bool
         decide if noise or without noise should be in the plot
+
+    lambdas_n : int
+        number of lamda values explored, regularization parameter
+
+    etas : list
+        eta (learning rate) values explored
+
+    n_iter : int
+        number of iterations
     """
     plt.figure(figsize=(12, 6))
     plt.plot(x,y, marker='o', color='blue', label='Runges function - no noise')
     plt.scatter(x_train, y_train, marker='o', color='green', label='Runges function - training data')
     plt.scatter(x_test, y_predicted_rescaled, marker='o', color='red', label='Runges function - predicted and rescaled')
     plt.legend()
-    if noise:
-        text = f'Runges function with {regression_method} regression with noise\nNumber of data points: {n_datapoints} Polynomial degree: {poly_degree}'
-        filename = f'Runges function with {regression_method} regression with noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree}.png'
+    if noise:                   
+        text = f'Runges function with {regression_method} regression with noise\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
+        filename = f'Runges function with {regression_method} regression with noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of learning rate{len(eta)} - Number of iterations {n_iter}.png'
         plt.title(text)
     else:
-        text = f'Runges function with {regression_method} regression without noise\nNumber of data points: {n_datapoints} Polynomial degree: {poly_degree}'
-        filename = f'Runges function with {regression_method} regression without noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree}.png'
+        text = f'Runges function with {regression_method} regression without noise\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
+        filename = f'Runges function with {regression_method} regression without noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of learning rate{len(eta)} - Number of iterations {n_iter}.png'
         plt.title(text)
     plt.xlabel('X values')
     plt.ylabel('Y values')
-    plt.savefig(filename)
+    plt.tight_layout()
+    plt.savefig(filename, bbox_inches='tight')
     plt.show()
     plt.close()

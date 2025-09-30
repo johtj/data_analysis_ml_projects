@@ -190,6 +190,8 @@ def lasso_gradient_descent(X, y, lambda_, learning_rate, tol, max_iter, fit_inte
     Question 3: The lasso regression and code should contain both gradient and lambda parameters?
     Question 4: How to scale intercept back to original values, it is centered in code
 
+    Modifications to provided code from Copilot to adjust for scaling
+
     Returns
     -------
     coef: numpy array shape (n)
@@ -229,15 +231,9 @@ def lasso_gradient_descent(X, y, lambda_, learning_rate, tol, max_iter, fit_inte
     n_samples, n_features = X.shape
     coef = np.zeros(n_features)
 
-    if fit_intercept:
-        y_mean = np.mean(y)
-        y_centered = y - y_mean
-    else:
-        y_centered = y
-
     for iteration in range(max_iter):
         coef_old = coef.copy()
-        gradient = -2 * X.T @ (y_centered - X @ coef) / n_samples
+        gradient = -2 * X.T @ (y - X @ coef) / n_samples
         coef -= learning_rate * gradient
 
         for j in range(n_features):
@@ -246,9 +242,6 @@ def lasso_gradient_descent(X, y, lambda_, learning_rate, tol, max_iter, fit_inte
         if np.sum(np.abs(coef - coef_old)) < tol:
             break
 
-    if fit_intercept:
-        intercept = y_mean - np.mean(X, axis=0) @ coef
-    else:
         intercept = 0.0
 
     return coef, intercept
