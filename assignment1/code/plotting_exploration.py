@@ -349,10 +349,12 @@ def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, 
             coef, intercept = lasso_gradient_descent(X_train, y_train, lambda_, lr, tol, max_iter, fit_intercept)
             y_tilde_test = X_test @ coef  + intercept
             mse = MSE(y_test, y_tilde_test)
+            r2 = R2(y_test, y_tilde_test)
             lasso_results.append({
                 'lambda': lambda_,
                 'learning_rate': lr,
                 'mse': mse,
+                'r2': r2,
                 'coef': coef,
                 'intercept': intercept
             })
@@ -362,19 +364,20 @@ def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, 
     
     # Extract all MSE values from the list
     mse_values = np.array([entry['mse'] for entry in lasso_results if 'mse' in entry])
+    r2_values = np.array([entry['r2'] for entry in lasso_results if 'r2' in entry])
 
 
     y_tilde_train = X_train @ best_lasso['coef'] + best_lasso['intercept']
     y_tilde_test = X_test @ best_lasso['coef'] + best_lasso['intercept']
 
-    # Calculate MSE for training and test data
+    # Calculate MSE for training and test data - best value 
     mse_train_lasso = MSE(y_train, y_tilde_train)
     mse_test_lasso = MSE(y_test, y_tilde_test)
     mse_train.append(mse_train_lasso)
     mse_test.append(mse_test_lasso)
     if verbose: print(f"Lasso: Lambda: {lambda_}, MSE_train_lasso: {mse_train_lasso}, MSE_test_lasso: {mse_test_lasso}")
     
-    # Calculate R2 for training and test data
+    # Calculate R2 for training and test data - best value 
     r2_train_lasso = R2(y_train, y_tilde_train)
     r2_test_lasso = R2(y_test, y_tilde_test)
     r2_train.append(r2_train_lasso)
@@ -385,7 +388,7 @@ def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, 
         print(f"Lasso own implementation best result: Lambda: {best_lasso['lambda']}, Learning rate: {best_lasso['learning_rate']}, MSE: {best_lasso['mse']}")
         print(f"Lasso coef: {best_lasso['coef']}, intercept: {best_lasso['intercept']}")
 
-    return best_lasso, mse_train, mse_test, r2_train, r2_test, mse_values
+    return best_lasso, mse_train, mse_test, r2_train, r2_test, mse_values, r2_values
 
 
 
@@ -412,8 +415,6 @@ def plot_heatmap_lasso(mse_array, lambda_n, etas):
     """
 
     mse_matrix = np.array(mse_array).reshape((lambda_n, len(etas)))
-    print(mse_matrix.shape)
-
 
     plt.figure(figsize=(6,4))
     fig, ax = plt.subplots()
@@ -425,10 +426,12 @@ def plot_heatmap_lasso(mse_array, lambda_n, etas):
                         ha="center", va="center", color="w")
             
     ax.set_ylabel("Lambdas", fontsize=12)
-    ax.set_xlabel("learning rate", fontsize=12)
+    ax.set_xlabel("Learning rate", fontsize=12)
     ax.set_title("Mean Squared Error (MSE) for different lambda values and learning rate", fontsize=12)
     plt.colorbar(im)
+    plt.savefig(f'Heatmap Lasso regression - Number of lambdas {lambda_n} number of learning rate {len(etas)}.png')
     plt.show()
+    plt.close()
 
 
 def plot_theta_by_polynomials(thetas, degree):
@@ -519,11 +522,11 @@ def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_t
     plt.legend()
     if noise:
         text = f'Runges function with {regression_method} regression with noise\nNumber of data points: {n_datapoints} Polynomial degree: {poly_degree}'
-        filename = f'Runges function with {regression_method} regression with noise - Number of data points: {n_datapoints} Polynomial degree - {poly_degree}.png'
+        filename = f'Runges function with {regression_method} regression with noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree}.png'
         plt.title(text)
     else:
         text = f'Runges function with {regression_method} regression without noise\nNumber of data points: {n_datapoints} Polynomial degree: {poly_degree}'
-        filename = f'Runges function with {regression_method} regression without noise - Number of data points: {n_datapoints} Polynomial degree - {poly_degree}.png'
+        filename = f'Runges function with {regression_method} regression without noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree}.png'
         plt.title(text)
     plt.xlabel('X values')
     plt.ylabel('Y values')
