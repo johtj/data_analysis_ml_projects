@@ -284,19 +284,19 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas, verbose=False):
    
     """
 
-    lambdas_list = []
     mse_train = []
     mse_test = []
     r2_train  = []
     r2_test = []
+    theta_ridge_list = []
 
     for l in lambdas:
-        lambdas_list.append(l)
-
         # Apply ridge regression
         theta_ridge = Ridge_parameters(X_train, y_train,l)
+        theta_ridge_list.append(theta_ridge)
         y_tilde_train = X_train @ theta_ridge
         y_tilde_test = X_test @ theta_ridge
+
         if verbose: print(f"Ridge: Lambda: {l}, Coef: {theta_ridge}")
 
 
@@ -314,7 +314,7 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas, verbose=False):
         r2_test.append(r2_test_ridge)
         if verbose: print(f"Lambda: {l}, R2_train_ridge: {r2_train_ridge}, R2_test_ridge: {r2_test_ridge} \n")
 
-    return lambdas_list, mse_train, mse_test, r2_train, r2_test, theta_ridge
+    return mse_train, mse_test, r2_train, r2_test, theta_ridge_list
 
 
 
@@ -551,7 +551,7 @@ def plot_theta_by_polynomials(thetas, degree, n_datapoints):
 
 
 
-def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise, n_lambdas, eta, n_iter):
+def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise, n_lambdas, lambda_value, eta, n_iter):
 
     """
     Plot x, y, x_train, y_train and x_test with predicted y_values at original scale.
@@ -599,14 +599,17 @@ def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_t
     lambdas_n : int
         number of lamda values explored, regularization parameter
 
+    lambda_value : float
+        value of lambda used for plotting Ridge with the number in the title
+
     etas : list
         eta (learning rate) values explored
+        only for Lasso regression
 
     n_iter : int
         number of iterations
     """
     plt.figure(figsize=(12, 6))
-    #plt.plot(x,y, marker='o', color='blue', label='Runges function')
     plt.plot(x,y, color='blue', label='Runges function')
     plt.scatter(x_train, y_train, marker='o', color='green', label='Runges function - training data')
     plt.scatter(x_test, y_predicted_rescaled, marker='o', color='red', label='Runges function - predicted and rescaled')
@@ -618,16 +621,16 @@ def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_t
         noise_text = "without"
 
     if regression_method == "OLS":
-        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}'
+        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}'
         filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree}.png'
     elif regression_method == "Ridge":
-        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}'
-        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas}.png'
+        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nLambda value: {lambda_value}'
+        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Lambda value {lambda_value}.png'
     elif regression_method == "Ridge-gradient":
-        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\nNumber of iterations: {n_iter}'
-        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of iterations {n_iter}.png'
+        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nLambda value: {lambda_value}\nNumber of iterations: {n_iter}'
+        filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Lambda value {lambda_value} - Number of iterations {n_iter}.png'
     elif regression_method == "Lasso":
-        text = f'Runges function with {regression_method} regression with {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
+        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
         filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of learning rate{len(eta)} - Number of iterations {n_iter}.png'
     else:
         raise ValueError(f"Unknown regression method: {regression_method}")
