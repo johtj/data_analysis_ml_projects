@@ -285,6 +285,7 @@ def sklearn_lasso_regression(X, y, alpha, use_intercept, max_iterations, toleran
     RegLasso.fit(X, y)
     if verbose: print(f"Sklearn coef: {RegLasso.coef_}, Sklearn intercept: {RegLasso.intercept_}")
 
+    return RegLasso.coef_, RegLasso.intercept_
 
 def rescale_theta_intercept(coef_scaled, intercept_scaled, y_train_std, y_train_mean, X_train_std, X_train_mean, verbose):
     """

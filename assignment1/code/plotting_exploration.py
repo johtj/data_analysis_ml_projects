@@ -45,14 +45,15 @@ def plot_mse(regression_method, degree,  n_datapoints, x_axis_data, mse_train, m
     if regression_method == "Ridge":
         x_axis_label = f"Lambdas"
         n_lambdas = len(x_axis_data)
-        text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        #text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
         filename = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise - Number of lambdas {n_lambdas} - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
     elif regression_method == "OLS":
         x_axis_label = "Polynomial degree"
-        text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        #text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
         filename = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
 
-    plt.title(text)  
+    # removed title from plot, but keep code in case needed later
+    #plt.title(text)  
     plt.plot(x_axis_data, mse_train, label='MSE train')
     plt.plot(x_axis_data, mse_test, label='MSE test')
     plt.xlabel(x_axis_label)
@@ -103,14 +104,15 @@ def plot_r2(regression_method, degree, n_datapoints, x_axis_data, r2_train, r2_t
     if regression_method == "Ridge":
         x_axis_label = f"Lambdas"
         n_lambdas = len(x_axis_data)
-        text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        #text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
         filename = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise - Number of lambdas {n_lambdas} - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
     elif regression_method == "OLS":
         x_axis_label = "Polynomial degree"
-        text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
+        #text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
         filename = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
 
-    plt.title(text)  
+    # removed title from plot, but keep code in case needed later
+    #plt.title(text)  
     plt.plot(x_axis_data, r2_train, label='R2 train')
     plt.plot(x_axis_data, r2_test, label='R2 test')
     plt.xlabel(x_axis_label)
@@ -438,6 +440,8 @@ def lasso_grid_search(X_train, X_test, y_train, y_test, lambdas, learning_rate, 
 
 def plot_heatmap_lasso(mse_or_r2, mse_array, lambdas, etas, degree, n_datapoints, n_iter):
     """
+    Not used, kept for documentation. See function heatmap_variable_colwidth
+
     Plotting of heatmap from mse values from lasso_grid_search
     Depends on number of lambda values to explore and learning rate (etas)
 
@@ -518,6 +522,141 @@ def plot_heatmap_lasso(mse_or_r2, mse_array, lambdas, etas, degree, n_datapoints
     plt.close()
 
 
+
+
+def heatmap_variable_colwidth(mse_array, lambdas, etas, mse_or_r2, degree, n_datapoints, n_iter):
+    from matplotlib.textpath import TextPath
+    from matplotlib.font_manager import FontProperties
+    """
+    Plotting of heatmap from mse values from lasso_grid_search
+    Depends on number of lambda values to explore and learning rate (etas)
+    
+    Draw a heatmap where each column width (and optionally row height) fits the text.
+    Based on function plot_heatmap_lasso where Microsoft Copilot were asked Question
+        ####
+        QUESTION: can i set size of column in heatmap to size of text?
+            --> provided code to Copilot    
+                # Keep imshow in index space (so your text annotations still land correctly)
+                im = ax.imshow(mse_matrix, aspect='auto', origin='upper')
+
+                for i in range(0, (L)):
+                    for j in range(E):
+                        #text = ax.text(j, i, f"{mse_matrix[i, j]:.2e}",
+                        text = ax.text(j, i, f"{mse_matrix[i, j]:.3f}",
+                                    ha="center", va="center", color="black", fontsize = 12)
+    Minor modifications to provided code from Copilot
+                                    
+
+    Returns
+    -------
+    None
+        
+    Parameters
+    ----------
+    mse_array : numpy array shape (n)
+        array with mse values 
+
+    lambdas : array
+        lambda values to explore
+
+    etas : list
+        eta (learning rate) values explored
+    
+    mse_or_r2 : string
+        type of metric
+        used in filename
+  
+    degree : int
+        polynomial degree
+        used in filename
+    
+    n_iter : int
+        number of iterations
+        used in filename
+    """
+
+    fmt="{:.3f}"
+    fontsize=12
+    cmap="viridis"
+    pad=1.10
+    scale_rows=True
+    text_color="white"
+
+    mse_matrix = np.array(mse_array).reshape((len(lambdas), len(etas)))
+
+    L, E = mse_matrix.shape
+    labels = np.array([[fmt.format(mse_matrix[i, j]) for j in range(E)] for i in range(L)], dtype=object)
+
+    fp = FontProperties(size=fontsize)
+
+    # Measure text sizes (units are in font units; proportionality is all we need)
+    widths = np.zeros_like(mse_matrix, dtype=float)
+    heights = np.zeros_like(mse_matrix, dtype=float)
+    for i in range(L):
+        for j in range(E):
+            tp = TextPath((0, 0), labels[i, j], prop=fp)
+            bb = tp.get_extents()
+            widths[i, j] = bb.width
+            heights[i, j] = bb.height
+
+    # Column widths: use the widest label in each column
+    col_w = pad * widths.max(axis=0)
+
+    # Row heights: either scale to tallest text in each row, or keep uniform
+    if scale_rows:
+        row_h = pad * heights.max(axis=1)
+    else:
+        row_h = np.full(L, pad * heights.max())  # same height for all rows
+
+    # Build grid edges (non-uniform)
+    x_edges = np.concatenate(([0], np.cumsum(col_w)))   # length E+1
+    y_edges = np.concatenate(([0], np.cumsum(row_h)))   # length L+1
+
+    # Create the plot
+    fig, ax = plt.subplots(constrained_layout=True)
+    X, Y = np.meshgrid(x_edges, y_edges)
+
+    # pcolormesh expects M with shape (Ny, Nx) == (L, E)
+    # Default origin is lower; we invert y to resemble 'origin="upper"' behavior.
+    mesh = ax.pcolormesh(X, Y, mse_matrix, cmap=cmap, shading='flat')
+
+    # Compute centers for annotations and ticks
+    x_centers = 0.5 * (x_edges[:-1] + x_edges[1:])
+    y_centers = 0.5 * (y_edges[:-1] + y_edges[1:])
+
+    # Put the labels in the center of each cell
+    for i in range(L):
+        for j in range(E):
+            ax.text(x_centers[j], y_centers[i], labels[i, j],
+                    ha='center', va='center', color=text_color, fontsize=fontsize)
+
+    # Make row 0 appear at the top (like origin='upper' with imshow)
+    ax.set_ylim(y_edges[-1], y_edges[0])
+    ax.set_aspect('auto')
+
+    # Optional: ticks at centers
+    ax.set_xticks(x_centers)
+    ax.set_yticks(y_centers)
+    ax.set_ylabel("Lambdas", fontsize=12)
+    ax.set_xlabel("Learning rate", fontsize=12)
+    ax.set_xticklabels([f"{eta:.3f}" for eta in etas], fontsize=12)#, rotation=45)
+    #ax.set_yticklabels([f"{lmbd:.3f}" for lmbd in lambdas], fontsize=12)
+    ax.set_yticklabels([f"{lmbd:.1e}" for lmbd in lambdas], fontsize=12) # scientific notation
+    
+
+    
+    cbar = plt.colorbar(mesh, ax=ax)  # Link colorbar to your pcolormesh
+    cbar.ax.tick_params(labelsize=fontsize)  # Set tick font size
+    cbar.set_label('MSE', fontsize=fontsize)  # Optional: add label
+
+    plt.savefig(f'Heatmap Lasso regression with {mse_or_r2} - Number of lambdas {len(lambdas)} number of learning rate {len(etas)} - polynomial degree {degree} - datapoints {n_datapoints} - Number of iterations {n_iter}.png', bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+
+
+
+
 def plot_theta_by_polynomials(thetas, degree, n_datapoints):
     """
     Plotting thetas as function of polynomial degree
@@ -537,18 +676,70 @@ def plot_theta_by_polynomials(thetas, degree, n_datapoints):
     n_datapoints : int
         number of datapoints in regression
     """
-    for i, theta in enumerate(thetas):
-        plt.plot(range(len(theta)), theta, label=f'Degree {i + 1}')
     
-    plt.xlabel('Degree')
-    plt.ylabel('Theta Value')
-    plt.title(f'Theta values by polynomial degree {degree} - OLS regression\nDatapoints {n_datapoints}')
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    # ensure integer values at x-axis
+    import matplotlib.ticker as ticker
+    plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+
+    for i, theta in enumerate(thetas):
+        plt.plot(range(len(theta)), theta, label=f'Degree {i + 1}', alpha=0.7)
+    
+    plt.xlabel('Degree', fontsize=12)
+    plt.ylabel('Theta Value', fontsize=12)
+    # removed title from plotting, code kept in case needed later
+    #plt.title(f'Theta values by polynomial degree {degree} - OLS regression\nDatapoints {n_datapoints}')
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
     plt.tight_layout(rect=[0, 0, 0.85, 1])  
     plt.savefig(f'Theta values by polynomial degree {degree} - OLS regression - Datapoints {n_datapoints}', bbox_inches='tight')
     plt.show()
     plt.close()
 
+
+
+def plot_theta_by_polynomials_comparison(thetas, degree, n_datapoints, regressions):
+    """
+    Plotting thetas as function of polynomial degree
+
+    Returns
+    -------
+    None
+        
+    Parameters
+    ----------
+    thetas: list
+        with values of theta for each polynomial degree analysed
+
+    degree : int
+        Polynomial degree used in analysis
+
+    regressions : list
+        string values for legend in plot    
+    """
+    
+    # ensure integer values at x-axis
+    import matplotlib.ticker as ticker
+    # Ensure integer values at x-axis
+    plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+
+    # Plot each theta series
+    for i, theta in enumerate(thetas):
+        plt.plot(range(1, len(theta) + 1), theta, label=regressions[i], alpha=0.7)
+
+    # Axis labels
+    plt.xlabel('Degree', fontsize=12)
+    plt.ylabel('Theta Value', fontsize=12)
+
+    # Set x-axis ticks from 1 to 15
+    plt.xticks(range(1, 16))
+
+    # Legend and layout
+    plt.legend()
+    plt.tight_layout(rect=[0, 0, 0.85, 1])  
+
+    # Save and show plot
+    plt.savefig(f'Theta values by polynomial degree {degree} datapoints {n_datapoints} {regressions}', bbox_inches='tight')
+    plt.show()
+    plt.close()
 
 
 def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise, n_lambdas, lambda_value, eta, n_iter):
@@ -609,35 +800,43 @@ def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_t
     n_iter : int
         number of iterations
     """
-    plt.figure(figsize=(12, 6))
+    
+
+    plt.figure(figsize=(12, 8))
     plt.plot(x,y, color='blue', label='Runges function')
-    plt.scatter(x_train, y_train, marker='o', color='green', label='Runges function - training data')
-    plt.scatter(x_test, y_predicted_rescaled, marker='o', color='red', label='Runges function - predicted and rescaled')
-    plt.legend()
+    size_scatter_train = 6
+    size_scatter_predicted = 16
+    plt.scatter(x_train, y_train, marker='o', s=size_scatter_train, color='green', label='Runges function - training data')
+    plt.scatter(x_test, y_predicted_rescaled, s=size_scatter_predicted, marker='o', color='red', label='Runges function - predicted and rescaled')
 
     if noise:
         noise_text = "with"
     else:
         noise_text = "without"
 
+    # writing information to plot title removed, but kept in code if needed later
     if regression_method == "OLS":
-        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}'
+        #text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}'
         filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree}.png'
     elif regression_method == "Ridge":
-        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nLambda value: {lambda_value}'
+        #text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nLambda value: {lambda_value}'
         filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Lambda value {lambda_value}.png'
     elif regression_method == "Ridge-gradient":
-        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nLambda value: {lambda_value}\nNumber of iterations: {n_iter}'
+        #text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nLambda value: {lambda_value}\nNumber of iterations: {n_iter}'
         filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Lambda value {lambda_value} - Number of iterations {n_iter}.png'
     elif regression_method == "Lasso":
-        text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
+        #text = f'Runges function with {regression_method} regression {noise_text}\nNumber of data points: {n_datapoints}\nPolynomial degree: {poly_degree}\nNumber of lambdas: {n_lambdas}\n Number of learning rate: {len(eta)}\nNumber of iterations: {n_iter}'
         filename = f'Runges function with {regression_method} regression {noise_text} noise - Number of data points {n_datapoints} Polynomial degree - {poly_degree} - Number of lambdas {n_lambdas} - Number of learning rate{len(eta)} - Number of iterations {n_iter}.png'
     else:
         raise ValueError(f"Unknown regression method: {regression_method}")
     
-    plt.title(text)
-    plt.xlabel('X values')
-    plt.ylabel('Y values')
+    #plt.title(text)
+    f_size =20
+    plt.legend(fontsize=f_size)
+    plt.xlabel('X values', fontsize=f_size)
+    plt.ylabel('Y values', fontsize=f_size)
+    plt.xticks(fontsize=f_size)
+    plt.yticks(fontsize=f_size)
     plt.tight_layout()
     plt.savefig(filename, bbox_inches='tight')
     plt.show()
