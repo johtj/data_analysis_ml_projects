@@ -647,7 +647,7 @@ def heatmap_variable_colwidth(mse_array, lambdas, etas, mse_or_r2, degree, n_dat
     
     cbar = plt.colorbar(mesh, ax=ax)  # Link colorbar to your pcolormesh
     cbar.ax.tick_params(labelsize=fontsize)  # Set tick font size
-    cbar.set_label('MSE', fontsize=fontsize)  # Optional: add label
+    cbar.set_label(mse_or_r2, fontsize=fontsize)  # Optional: add label
 
     plt.savefig(f'Heatmap Lasso regression with {mse_or_r2} - Number of lambdas {len(lambdas)} number of learning rate {len(etas)} - polynomial degree {degree} - datapoints {n_datapoints} - Number of iterations {n_iter}.png', bbox_inches='tight')
     plt.show()
