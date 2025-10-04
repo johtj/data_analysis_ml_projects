@@ -686,29 +686,48 @@ def heatmap_variable_colwidth(mse_array, lambdas, etas, mse_or_r2, degree, n_dat
 
 
 
-
 def plot_theta_by_polynomials(thetas, degree, n_datapoints):
+
     """
+
     Plotting thetas as function of polynomial degree
 
     Returns
     -------
     None
-        
+
     Parameters
     ----------
+
     thetas: list
         with values of theta for each polynomial degree analysed
-
+        
     degree : int
         Polynomial degree used in analysis
 
     n_datapoints : int
         number of datapoints in regression
-    """
-    
-    return lambdas, mse_train, mse_test, r2_train, r2_test
 
+    """
+    # ensure integer values at x-axis
+    import matplotlib.ticker as ticker
+
+    plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+
+    for i, theta in enumerate(thetas):
+
+        plt.plot(range(len(theta)), theta, label=f'Degree {i + 1}', alpha=0.7)
+
+    plt.xlabel('Degree', fontsize=12)
+    plt.ylabel('Theta Value', fontsize=12)
+    # removed title from plotting, code kept in case needed later
+    #plt.title(f'Theta values by polynomial degree {degree} - OLS regression\nDatapoints {n_datapoints}')
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
+    plt.tight_layout(rect=[0, 0, 0.85, 1])  
+    plt.savefig(f'Theta values by polynomial degree {degree} - OLS regression - Datapoints {n_datapoints}', bbox_inches='tight')
+    plt.show()
+    plt.close()
+    
 
 def explore_iterations_GD_methods_ridge(ns,eta,lam,x,y,x_train,x_test,X_train,X_test,y_train):
 
