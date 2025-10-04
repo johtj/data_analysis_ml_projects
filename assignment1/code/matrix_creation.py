@@ -66,6 +66,12 @@ def standard_scaler(X_train, X_test):
 
     X_test_scaled : numpy array shape (n,f)
         Standardized test feature matrix
+    
+    X_mean : numpy array shape (n)
+        Mean of columns in X
+
+    X_std : numpy array shape (n)
+        Standard deviation of columns in X
 
     Parameters
     ----------
@@ -76,13 +82,16 @@ def standard_scaler(X_train, X_test):
     X_test : numpy array shape (n,f)
         Test feature matrix
     """
-    X_mean = np.mean(X_train, axis=0)
-    X_std = np.std(X_train, axis=0)
+    X_train_mean = np.mean(X_train, axis=0)
+    X_train_std = np.std(X_train, axis=0)
 
-    X_train_scaled = (X_train - X_mean) / X_std
-    X_test_scaled = (X_test - X_mean) / X_std
+    X_train_scaled = (X_train - X_train_mean) / X_train_std
+    X_test_scaled = (X_test - X_train_mean) / X_train_std
 
-    return X_train_scaled, X_test_scaled
+    return X_train_scaled, X_test_scaled, X_train_mean, X_train_std
+
+
+
 
 
 def scale_features_by_intercept_use(X_train, X_test, use_intercept):
@@ -116,10 +125,10 @@ def scale_features_by_intercept_use(X_train, X_test, use_intercept):
     if use_intercept == True:  
         X_train_scaled = X_train.copy()
         X_test_scaled  = X_test.copy()
-        X_train_scaled_excluding_intercept, X_test_scaled_excluding_intercept = standard_scaler(X_train[:, 1:], X_test[:, 1:])
+        X_train_scaled_excluding_intercept, X_test_scaled_excluding_intercept, X_train_mean, X_train_std = standard_scaler(X_train[:, 1:], X_test[:, 1:])
         X_train_scaled[:, 1:] = X_train_scaled_excluding_intercept
         X_test_scaled[:, 1:]  = X_test_scaled_excluding_intercept
     else:
-        X_train_scaled, X_test_scaled = standard_scaler(X_train, X_test)
+        X_train_scaled, X_test_scaled, X_train_mean, X_train_std = standard_scaler(X_train, X_test)
     
-    return X_train_scaled, X_test_scaled
+    return X_train_scaled, X_test_scaled, X_train_mean, X_train_std
