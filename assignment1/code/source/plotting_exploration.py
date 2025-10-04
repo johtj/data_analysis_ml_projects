@@ -708,7 +708,7 @@ def plot_theta_by_polynomials(thetas, degree, n_datapoints):
     plt.close()
     
 def explore_eta(X_train,X_test,y_train,y_test,num_iters,eta_list,lam,verbose=False):
-
+    
     mse_train_OLS = []
     mse_test_OLS = []
     r2_train_OLS  = []
@@ -739,6 +739,7 @@ def explore_eta(X_train,X_test,y_train,y_test,num_iters,eta_list,lam,verbose=Fal
         mse_test_OLS.append(mse_test_gdOLS)
         mse_train_Ridge.append(mse_train_gdRidge)
         mse_test_Ridge.append(mse_test_gdRidge)
+        print(mse_test_gdOLS)
 
         # Calculate R2 for training and test data
         r2_train_gdOLS = R2(y_train, y_tilde_trainOLS)
