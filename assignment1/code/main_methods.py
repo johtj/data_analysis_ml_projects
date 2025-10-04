@@ -69,6 +69,53 @@ def Ridge_parameters(X, y, lamb):
 
     return r_params
 
+def gradient_descent_ridge(X,y,eta,lam,num_iters,n_features):
+    """
+        Calculates the optimal parameters, theta, using the 
+        ridge regression and gradient descent
+
+        Returns
+        -------
+        theta_gdRidge : numpy array shape (n)
+            the optimal parameters, theta as given by the
+            OLS method.
+
+        Parameters
+        ----------
+        X : numpy array shape (n,f)
+            Feature matrix for the data, where n is the number
+            of data points and f is the number of features.
+
+        y : numpy array shape (n)
+            Y values of the data set. 
+        
+        eta : int
+            gradient descent parameter
+    
+        lam : int
+            learning rate
+        
+        num_iters : int
+            number of iterations
+
+        n_features : int
+            number of features in feature matrix
+    """
+
+    # Initialize weights for gradient descent
+    theta_gdRidge = np.zeros(n_features)
+
+    # Gradient descent loop
+    for t in range(num_iters):
+        # Compute gradients for Ridge
+        grad_Ridge = (2.0/n) * X.T @(X @ theta_gdRidge - y) + 2*lam*theta_gdRidge
+
+        # Update parameters theta
+        theta_gdRidge -= eta*grad_Ridge 
+
+    # After the loop, theta contains the fitted coefficients
+    return theta_gdRidge
+
 
 
 def gradient_descent_OLS(X,y,eta,num_iters,n_features):
