@@ -7,21 +7,20 @@ def stochastic_GD_Ridge(X,y,n,M,n_epochs,eta,lam):
 
     for epoch in range(1,n_epochs+1): #iterations over the whole dataset
 
-        X_shuffled = np.random.permutation(X) #reshuffle x 
-        y_shuffled = np.random.permutation(y) #resuffle y
-
         for i in range(m): #do number of minibatches
             
             k = np.random.randint(m) #choose random minibatch
             start_i = k*M #random minibatch * minibatch size
             end_i = start_i + M -1
 
-            X_batch = X_shuffled[start_i:end_i] #sslice batch
-            y_batch = y_shuffled[start_i:end_i]
+            X_batch = X[start_i:end_i] #slice batch
+            y_batch = y[start_i:end_i]
+
             n_batch = len(X_batch)
             #calculate gradients
             
             grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta            
+            
             #update theta
             theta -= grad*eta
 
@@ -36,17 +35,15 @@ def SGD_Ridge_momentum(X,y,n,M,n_epochs,eta,lam,momentum):
 
     for epoch in range(1,n_epochs+1): #iterations over the whole dataset
 
-        X_shuffled = np.random.permutation(X) #reshuffle x 
-        y_shuffled = np.random.permutation(y) #resuffle y
-
+    
         for i in range(m): #do number of minibatches
             
             k = np.random.randint(m) #choose random minibatch
             start_i = k*M #random minibatch * minibatch size
             end_i = start_i + M -1
 
-            X_batch = X_shuffled[start_i:end_i] #sslice batch
-            y_batch = y_shuffled[start_i:end_i]
+            X_batch = X[start_i:end_i] #sslice batch
+            y_batch = y[start_i:end_i]
             n_batch = len(X_batch)
     
             grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta
@@ -68,13 +65,10 @@ def SGD_Ridge_ADAgrad(X,y,n,M,n_epochs,eta,lam):
 
     theta = np.zeros(np.shape(X)[1])
     r = 0 #gradient accumulation variable
-    delta = np.power(10,-7)
+    delta = 10e-7
 
 
     for epoch in range(1,n_epochs+1): #iterations over the whole dataset
-
-        X_shuffled = np.random.permutation(X) #reshuffle x 
-        y_shuffled = np.random.permutation(y) #resuffle y
 
         for i in range(m): #do number of minibatches
             
@@ -82,8 +76,8 @@ def SGD_Ridge_ADAgrad(X,y,n,M,n_epochs,eta,lam):
             start_i = k*M #random minibatch * minibatch size
             end_i = start_i + M -1
 
-            X_batch = X_shuffled[start_i:end_i] #sslice batch
-            y_batch = y_shuffled[start_i:end_i]
+            X_batch = X[start_i:end_i] #sslice batch
+            y_batch = y[start_i:end_i]
             n_batch = len(X_batch)
 
             # Compute gradients for OSL
@@ -96,7 +90,7 @@ def SGD_Ridge_ADAgrad(X,y,n,M,n_epochs,eta,lam):
             update = (eta / (delta + np.sqrt(r))) * grad
 
             # Update parameters theta
-            theta += update
+            theta -= update
 
     return theta
 
@@ -106,14 +100,11 @@ def SGD_Ridge_RMSprop(X,y,n,M,n_epochs,eta,lam):
     theta = np.zeros(np.shape(X)[1])
     decay_rate = 0
     r = 0 #gradient accumulation variable
-    delta = np.power(10,-6) #stabilize division by small numbers
+    delta = 10e-6 #stabilize division by small numbers
     
 
 
     for epoch in range(1,n_epochs+1): #iterations over the whole dataset
-
-        X_shuffled = np.random.permutation(X) #reshuffle x 
-        y_shuffled = np.random.permutation(y) #resuffle y
 
         for i in range(m): #do number of minibatches
             
@@ -121,8 +112,8 @@ def SGD_Ridge_RMSprop(X,y,n,M,n_epochs,eta,lam):
             start_i = k*M #random minibatch * minibatch size
             end_i = start_i + M -1
 
-            X_batch = X_shuffled[start_i:end_i] #sslice batch
-            y_batch = y_shuffled[start_i:end_i]
+            X_batch = X[start_i:end_i] #sslice batch
+            y_batch = y[start_i:end_i]
             n_batch = len(X_batch)
         
             grad = (2.0/n_batch) * X_batch.T @(X_batch @ theta - y_batch) + 2*lam*theta
@@ -146,14 +137,12 @@ def SGD_Ridge_ADAM(X,y,n,M,n_epochs,eta,lam):
 
     decay1= 0.9
     decay2 = 0.999
-    s = 0, r = 0 #1st & 2nd moment variables 
+    s = 0
+    r = 0 #1st & 2nd moment variables 
     ts = 0 # time step
-    delta = np.power(10,-8) #numerical stabilization
+    delta = 10e-8 #numerical stabilization
 
     for epoch in range(1,n_epochs+1): #iterations over the whole dataset
-
-        X_shuffled = np.random.permutation(X) #reshuffle x 
-        y_shuffled = np.random.permutation(y) #resuffle y
 
         for i in range(m): #do number of minibatches
             
@@ -161,8 +150,8 @@ def SGD_Ridge_ADAM(X,y,n,M,n_epochs,eta,lam):
             start_i = k*M #random minibatch * minibatch size
             end_i = start_i + M -1
 
-            X_batch = X_shuffled[start_i:end_i] #sslice batch
-            y_batch = y_shuffled[start_i:end_i]
+            X_batch = X[start_i:end_i] #sslice batch
+            y_batch = y[start_i:end_i]
             n_batch = len(X_batch)
         
             # Compute gradients for OSL
@@ -170,15 +159,15 @@ def SGD_Ridge_ADAM(X,y,n,M,n_epochs,eta,lam):
             ts += 1
 
             s = decay1 * s  + (1-decay1)*grad  
-            r = decay2*r + (1-decay2)*grad
+            r = decay2*r + (1-decay2)*grad*grad
 
-            s_debias = s / (1-decay1^{ts})
-            r_debias = r / (1-decay2^{ts})
+            s_debias = s / (1-decay1**ts)
+            r_debias = r / (1-decay2**ts)
 
             update = -eta*(s_debias/np.sqrt(r_debias)+delta)
             
             # Update parameters theta
-            theta_gdRidge += update
+            theta += update
 
 
     return theta

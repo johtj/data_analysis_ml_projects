@@ -102,7 +102,7 @@ def gradient_descent_OLS_momentum(X,y,eta,num_iters,momentum):
     # After the loop, theta contains the fitted coefficients
     return theta_gdOLS
 
-def ADAgrad_OLS(X,y,eta,num_iters,n_features):
+def ADAgrad_OLS(X,y,eta,num_iters):
     '''
     glob_eta = 0
     initial_theta = 0 
@@ -121,7 +121,7 @@ def ADAgrad_OLS(X,y,eta,num_iters,n_features):
     theta_gdOLS = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     r = 0 #gradient accumulation variable
-    delta = np.power(10,-7)
+    delta = 10e-7
     # Gradient descent loop
 
     for t in range(num_iters):
@@ -136,11 +136,11 @@ def ADAgrad_OLS(X,y,eta,num_iters,n_features):
         update = (eta / (delta + np.sqrt(r))) * grad_OLS
 
         # Update parameters theta
-        theta_gdOLS += update
+        theta_gdOLS -= update
 
     return theta_gdOLS
 
-def RMSprop_OLS(X,y,eta,num_iters,n_features):
+def RMSprop_OLS(X,y,eta,num_iters):
     '''
     global_eta = 0
     decay_rate = 0
@@ -160,7 +160,7 @@ def RMSprop_OLS(X,y,eta,num_iters,n_features):
     n = X.shape[0]
     decay_rate = 0
     r = 0 #gradient accumulation variable
-    delta = np.power(10,-6) #stabilize division by small numbers
+    delta = 10e-6 #stabilize division by small numbers
     # Gradient descent loop
 
     for t in range(num_iters):
@@ -179,7 +179,7 @@ def RMSprop_OLS(X,y,eta,num_iters,n_features):
 
     return theta_gdOLS
 
-def ADAM_OLS(X,y,eta,num_iters,n_features):
+def ADAM_OLS(X,y,eta,num_iters):
     '''
     eta = 0.001 (suggested default)
     decay1 = 0.9 
@@ -210,7 +210,7 @@ def ADAM_OLS(X,y,eta,num_iters,n_features):
     s = 0
     r = 0 #1st & 2nd moment variables 
     ts = 0 # time step
-    delta = np.power(10,-8) #numerical stabilization
+    delta =10e-8 #numerical stabilization
 
     # Gradient descent loop
 
@@ -221,10 +221,10 @@ def ADAM_OLS(X,y,eta,num_iters,n_features):
         ts += 1
 
         s = decay1 * s  + (1-decay1)*grad_OLS  
-        r = decay2*r + (1-decay2)*grad_OLS
+        r = decay2*r + (1-decay2)*grad_OLS*grad_OLS
 
-        s_debias = s / (1-decay1^{ts})
-        r_debias = r / (1-decay2^{ts})
+        s_debias = s / (1-decay1**ts)
+        r_debias = r / (1-decay2**ts)
 
         update = -eta*(s_debias/np.sqrt(r_debias)+delta)
         

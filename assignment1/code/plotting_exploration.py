@@ -1,8 +1,38 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from matrix_creation import polynomial_features, scale_features_by_intercept_use
 from main_methods import OLS_parameters,Ridge_parameters
 from errors import MSE,R2
+from GD_OLS import gradient_descent_OLS,gradient_descent_OLS_momentum,ADAgrad_OLS,RMSprop_OLS,ADAM_OLS
+from GD_Ridge import gradient_descent_ridge,gradient_descent_ridge_momentum,ADAgrad_Ridge,RMSprop_Ridge,ADAM_Ridge
+from stochastic_OLS import stochastic_GD_OLS,SGD_OLS_momentum,SGD_OLS_ADAgrad,SGD_OLS_RMSprop,SGD_OLS_ADAM
+from stochastic_Ridge import stochastic_GD_Ridge,SGD_Ridge_momentum,SGD_Ridge_ADAgrad,SGD_Ridge_RMSprop,SGD_Ridge_ADAM
+
+def setup_preamble(n_datapoints,standard_deviation,p,use_intercept):
+    np.random.seed(250)  # ensure reproducibility numpy
+    random_state_int = 42   # ensure reproducibility train_test_split
+
+    # generating data without noise
+    x = np.linspace(-1, 1, num=n_datapoints)
+    y = 1 / (1 + 25 * x**2)
+
+    # generating data with noise
+    x_noise = np.linspace(-1, 1, num=n_datapoints) + np.random.normal(0, standard_deviation, n_datapoints)
+    y_noise = 1 / (1 + 25 * x_noise**2)
+
+    x_train,x_test, y_train_origin, y_test_origin = train_test_split(x,y,test_size=0.2,random_state=random_state_int)
+
+    X = polynomial_features(x, p,intercept=use_intercept) # intercept=True gives intercept column = 0 in standard scaler if intercept is True, and hence division by 0. 
+
+    # test and train dataset, and scaling of X_train and X_test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,random_state=random_state_int)
+    X_train_scaled, X_test_scaled = scale_features_by_intercept_use(X_train, X_test, use_intercept)
+
+    #ADD NOISY DATAAAA
+
+    return x,y,x_train,x_test,X_train_scaled,X_test_scaled,X_train,X_test,y_train,y_test
 
 def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=False):
     """
@@ -39,8 +69,8 @@ def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=Fals
         text = f'MSE for Different {x_axis_label} without Noise\nNumber of data points: {n_datapoints}'
         filename = f'MSE for Different {x_axis_label} without Noise - Number of data points {n_datapoints}.png'
         plt.title(text)
-    plt.plot(x_axis, mse_train, 'o',label='MSE train')
-    plt.plot(x_axis, mse_test, 'o', label='MSE test')
+    plt.plot(x_axis, mse_train, 'o-',label='MSE train')
+    plt.plot(x_axis, mse_test, 'o-', label='MSE test')
     plt.xlabel(x_axis_label)
     plt.ylabel('Mean Squared Error')
     plt.legend()
@@ -83,8 +113,8 @@ def plot_r2(n_datapoints, x_axis,x_axis_label, r2_train, r2_test, noise=False):
     else:
         plt.title(f'R2 Score for Different {x_axis_label} without Noise\nNumber of data points: {n_datapoints}')
         filename = f'R2 for Different {x_axis_label} without Noise - Number of data points {n_datapoints}.png'
-    plt.plot(x_axis, r2_train, label='R2 train')
-    plt.plot(x_axis, r2_test, label='R2 test')
+    plt.plot(x_axis, r2_train,'o-', label='R2 train')
+    plt.plot(x_axis, r2_test,'o-', label='R2 test')
     plt.xlabel(x_axis_label)
     plt.ylabel('R2 Score')
     plt.legend()
@@ -269,3 +299,216 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambd,n=50,verbose=False):
 
     
     return lambdas, mse_train, mse_test, r2_train, r2_test
+
+
+def explore_iterations_GD_methods_ridge(ns,eta,lam,x,y,x_train,x_test,X_train,X_test,y_train):
+
+    for n in ns:
+
+        theta = gradient_descent_ridge(X_train,y_train,eta,lam,n)
+        theta_n = Ridge_parameters(X_train,y_train,lam)
+        theta_m = gradient_descent_ridge_momentum(X_train,y_train,eta,lam,n,0.989)
+        theta_ad = ADAgrad_Ridge(X_train,y_train,eta,lam,n)
+        theta_rms = RMSprop_Ridge(X_train,y_train,eta,lam,n)
+        theta_ADAM = ADAM_Ridge(X_train,y_train,eta,lam,n)
+
+
+        y_tilde = X_test @ theta
+        y_tilde_c = X_test @ theta_n
+        y_tilde_m = X_test @ theta_m
+        y_tilde_ad = X_test @ theta_ad
+        y_tilde_ADAM = X_test @ theta_ADAM
+
+        fig = plt.figure(figsize=(20,10))
+
+        ax1 = plt.subplot(1,2,1)
+        ax1.plot(x,y,label="Runges function")
+
+        ax1.scatter(x_test,y_tilde,label="gradient descent")
+        ax1.scatter(x_test,y_tilde_c,label="regular ridge")
+        ax1.scatter(x_test,y_tilde_m,label="with momentum")
+        ax1.scatter(x_test,y_tilde_ad,label="adagrad")
+        ax1.scatter(x_test,y_tilde_ADAM,label="ADAM")
+
+        ax1.legend()
+        ax1.set_title("Test")
+
+        y_tilde_t = X_train @ theta
+        y_tilde_ct = X_train @ theta_n
+        y_tilde_mt = X_train @ theta_m
+        y_tilde_adt = X_train @ theta_ad
+        y_tilde_ADAMt = X_train @ theta_ADAM
+
+        ax2 = plt.subplot(1,2,2)
+        ax2.plot(x,y,label="target")
+
+        ax2.scatter(x_train,y_tilde_t,label="gradient descent")
+        ax2.scatter(x_train,y_tilde_ct,label="regular ridge")
+        ax2.scatter(x_train,y_tilde_mt,label="with momentum")
+        ax2.scatter(x_train,y_tilde_adt,label="adagrad")
+        ax2.scatter(x_train,y_tilde_ADAMt,label="ADAM")
+
+        ax2.legend()
+        ax2.set_title("Train")
+
+        fig.suptitle(f"Results for various gradient descent using ridge regression \n eta: {eta}, number of iterations: {n}")
+        fig.savefig(f"../figures/gradient_descent/gradient_descent_ridge_{n}_iterations.png")
+
+def explore_iterations_GD_methods_OLS(ns,eta,x,y,x_train,x_test,X_train,X_test,y_train):
+    for n in ns:
+
+        theta = gradient_descent_OLS(X_train,y_train,eta,n)
+        theta_n = OLS_parameters(X_train,y_train)
+        theta_m = gradient_descent_OLS_momentum(X_train,y_train,eta,n,0.989)
+        theta_ad = ADAgrad_OLS(X_train,y_train,eta,n)
+        theta_rms = RMSprop_OLS(X_train,y_train,eta,n)
+        theta_ADAM = ADAM_OLS(X_train,y_train,eta,n)
+
+
+        y_tilde = X_test @ theta
+        y_tilde_c = X_test @ theta_n
+        y_tilde_m = X_test @ theta_m
+        y_tilde_ad = X_test @ theta_ad
+        y_tilde_ADAM = X_test @ theta_ADAM
+
+        fig = plt.figure(figsize=(20,10))
+
+        ax1 = plt.subplot(1,2,1)
+        ax1.plot(x,y,label="target")
+
+        ax1.scatter(x_test,y_tilde,label="gradient descent")
+        ax1.scatter(x_test,y_tilde_c,label="regular ridge")
+        ax1.scatter(x_test,y_tilde_m,label="with momentum")
+        ax1.scatter(x_test,y_tilde_ad,label="adagrad")
+        ax1.scatter(x_test,y_tilde_ADAM,label="ADAM")
+
+        ax1.legend()
+        ax1.set_title("Test")
+
+        y_tilde_t = X_train @ theta
+        y_tilde_ct = X_train @ theta_n
+        y_tilde_mt = X_train @ theta_m
+        y_tilde_adt = X_train @ theta_ad
+        y_tilde_ADAMt = X_train @ theta_ADAM
+
+        ax2 = plt.subplot(1,2,2)
+        ax2.plot(x,y,label="target")
+
+        ax2.scatter(x_train,y_tilde_t,label="gradient descent")
+        ax2.scatter(x_train,y_tilde_ct,label="regular ridge")
+        ax2.scatter(x_train,y_tilde_mt,label="with momentum")
+        ax2.scatter(x_train,y_tilde_adt,label="adagrad")
+        ax2.scatter(x_train,y_tilde_ADAMt,label="ADAM")
+
+        ax2.legend()
+        ax2.set_title("Train")
+
+        fig.suptitle(f"Results for various gradient descent using OLS \n eta: {eta}, number of iterations: {n}")
+        fig.savefig(f"../figures/gradient_descent/gradient_descent_OLS_{n}_iterations.png")
+
+
+def explore_n_epochs_stochasticGD_ridge(num_epochs,num_points,size_minibatch,eta,lam,x,y,x_train,x_test,X_train,X_test,y_train):
+
+    for epochs in num_epochs:
+
+        theta = stochastic_GD_Ridge(X_train,y_train,num_points,size_minibatch,epochs,eta,lam)
+        theta_n = Ridge_parameters(X_train,y_train,lam)
+        theta_m = SGD_Ridge_momentum(X_train,y_train,num_points,size_minibatch,epochs,eta,lam,0.989)
+        theta_ad = SGD_Ridge_ADAgrad(X_train,y_train,num_points,size_minibatch,epochs,eta,lam)
+        theta_rms = SGD_Ridge_RMSprop(X_train,y_train,num_points,size_minibatch,epochs,eta,lam)
+        theta_ADAM = SGD_Ridge_ADAM(X_train,y_train,num_points,size_minibatch,epochs,eta,lam)
+
+
+        y_tilde = X_test @ theta
+        y_tilde_c = X_test @ theta_n
+        y_tilde_m = X_test @ theta_m
+        y_tilde_ad = X_test @ theta_ad
+        y_tilde_ADAM = X_test @ theta_ADAM
+
+        fig = plt.figure(figsize=(20,10))
+
+        ax1 = plt.subplot(1,2,1)
+        ax1.plot(x,y,label="target")
+
+        ax1.scatter(x_test,y_tilde,label="gradient descent")
+        ax1.scatter(x_test,y_tilde_c,label="regular ridge")
+        ax1.scatter(x_test,y_tilde_m,label="with momentum")
+        ax1.scatter(x_test,y_tilde_ad,label="adagrad")
+        ax1.scatter(x_test,y_tilde_ADAM,label="ADAM")
+
+        ax1.legend()
+        ax1.set_title("Test")
+
+        y_tilde_t = X_train @ theta
+        y_tilde_ct = X_train @ theta_n
+        y_tilde_mt = X_train @ theta_m
+        y_tilde_adt = X_train @ theta_ad
+        y_tilde_ADAMt = X_train @ theta_ADAM
+
+        ax2 = plt.subplot(1,2,2)
+        ax2.plot(x,y,label="target")
+
+        ax2.scatter(x_train,y_tilde_t,label="gradient descent")
+        ax2.scatter(x_train,y_tilde_ct,label="regular ridge")
+        ax2.scatter(x_train,y_tilde_mt,label="with momentum")
+        ax2.scatter(x_train,y_tilde_adt,label="adagrad")
+        ax2.scatter(x_train,y_tilde_ADAMt,label="ADAM")
+
+        ax2.legend()
+        ax2.set_title("Train")
+
+        fig.suptitle(f"Results for various stochastic gradient descent using ridge regression \n eta: {eta}, number of epochs: {epochs}")
+        fig.savefig(f"../figures/gradient_descent/gradient_descent_ridge_stochastic_{epochs}_epochs.png")
+        
+def explore_n_epochs_stochasticGD_OLS(num_epochs,num_points,size_minibatch,eta,x,y,x_train,x_test,X_train,X_test,y_train):
+    
+    for epochs in num_epochs:
+
+        theta = stochastic_GD_OLS(X_train,y_train,num_points,size_minibatch,epochs,eta)
+        theta_n = OLS_parameters(X_train,y_train)
+        theta_m = SGD_OLS_momentum(X_train,y_train,num_points,size_minibatch,epochs,eta,0.989)
+        theta_ad = SGD_OLS_ADAgrad(X_train,y_train,num_points,size_minibatch,epochs,eta)
+        theta_rms = SGD_OLS_RMSprop(X_train,y_train,num_points,size_minibatch,epochs,eta)
+        theta_ADAM = SGD_OLS_ADAM(X_train,y_train,num_points,size_minibatch,epochs,eta)
+
+
+        y_tilde = X_test @ theta
+        y_tilde_c = X_test @ theta_n
+        y_tilde_m = X_test @ theta_m
+        y_tilde_ad = X_test @ theta_ad
+        y_tilde_ADAM = X_test @ theta_ADAM
+
+        fig = plt.figure(figsize=(20,10))
+
+        ax1 = plt.subplot(1,2,1)
+        ax1.plot(x,y,label="target")
+
+        ax1.scatter(x_test,y_tilde,label="gradient descent")
+        ax1.scatter(x_test,y_tilde_c,label="regular ridge")
+        ax1.scatter(x_test,y_tilde_m,label="with momentum")
+        ax1.scatter(x_test,y_tilde_ad,label="adagrad")
+        ax1.scatter(x_test,y_tilde_ADAM,label="ADAM")
+
+        ax1.legend()
+        ax1.set_title("Test")
+
+        y_tilde_t = X_train @ theta
+        y_tilde_ct = X_train @ theta_n
+        y_tilde_mt = X_train @ theta_m
+        y_tilde_adt = X_train @ theta_ad
+        y_tilde_ADAMt = X_train @ theta_ADAM
+
+        ax2 = plt.subplot(1,2,2)
+        ax2.plot(x,y,label="target")
+
+        ax2.scatter(x_train,y_tilde_t,label="gradient descent")
+        ax2.scatter(x_train,y_tilde_ct,label="regular ridge")
+        ax2.scatter(x_train,y_tilde_mt,label="with momentum")
+        ax2.scatter(x_train,y_tilde_adt,label="adagrad")
+        ax2.scatter(x_train,y_tilde_ADAMt,label="ADAM")
+
+        ax2.legend()
+        ax2.set_title("Train")
+
+        fig.suptitle(f"Results for various stochastic gradient descent using OLS \n eta: {eta}, number of epochs: {epochs}")
+        fig.savefig(f"../figures/gradient_descent/gradient_descent_OLS_stochastic_{epochs}_epochs.png")

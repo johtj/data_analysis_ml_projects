@@ -136,7 +136,7 @@ def ADAgrad_Ridge(X,y,eta,lam,num_iters):
 
     return theta_gdRidge
 
-def RMSprop_Ridge(X,y,eta,num_iters):
+def RMSprop_Ridge(X,y,eta,lam,num_iters):
     '''
     global_eta = 0
     decay_rate = 0
@@ -161,8 +161,7 @@ def RMSprop_Ridge(X,y,eta,num_iters):
 
     for t in range(num_iters):
 
-        # Compute gradients for OSL
-        grad_Ridge = (2.0/n)*X.T @ (X @ theta_ridge - y)
+        grad_Ridge = (2.0/n) * X.T @(X @ theta_ridge - y) + 2*lam*theta_ridge
 
         #accumulate squared gradient 
         r = decay_rate * r + (1-decay_rate) * (grad_Ridge * grad_Ridge)
@@ -175,7 +174,7 @@ def RMSprop_Ridge(X,y,eta,num_iters):
 
     return theta_ridge
 
-def ADAM_Ridge(X,y,eta,num_iters):
+def ADAM_Ridge(X,y,eta,lam,num_iters):
     '''
     eta = 0.001 (suggested default)
     decay1 = 0.9 
@@ -211,12 +210,14 @@ def ADAM_Ridge(X,y,eta,num_iters):
     # Gradient descent loop
 
     for t in range(num_iters):
-
         # Compute gradients for OSL
-        grad_Ridge = (2.0/n)*X.T @ (X @ theta_Ridge - y)
+        grad_Ridge = (2.0/n) * X.T @(X @ theta_Ridge - y) + 2*lam*theta_Ridge
+
+        ts += 1
+
 
         s = decay1 * s  + (1-decay1)*grad_Ridge  
-        r = decay2*r + (1-decay2)*grad_Ridge
+        r = decay2 * r + (1-decay2)*grad_Ridge*grad_Ridge
 
         s_debias = s / (1-decay1**ts)
         r_debias = r / (1-decay2**ts)
@@ -225,5 +226,6 @@ def ADAM_Ridge(X,y,eta,num_iters):
         
         # Update parameters theta
         theta_Ridge += update
+
 
     return theta_Ridge
