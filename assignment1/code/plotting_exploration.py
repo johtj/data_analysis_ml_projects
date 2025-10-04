@@ -38,15 +38,17 @@ def plot_mse(n_datapoints, x_axis, x_axis_label, mse_train, mse_test, noise=Fals
     if noise:
         text = f'MSE for Different {x_axis_label} with Noise\nNumber of data points: {n_datapoints}'
         filename = f'MSE for Different {x_axis_label} with Noise - Number of data points {n_datapoints}.png'
-        plt.title(text)
+        #plt.title(text)
     else:
         text = f'MSE for Different {x_axis_label} without Noise\nNumber of data points: {n_datapoints}'
         filename = f'MSE for Different {x_axis_label} without Noise - Number of data points {n_datapoints}.png'
-        plt.title(text)
+        #plt.title(text)
     plt.plot(x_axis, mse_train, label='MSE train')
     plt.plot(x_axis, mse_test, label='MSE test')
-    plt.xlabel(x_axis_label)
-    plt.ylabel('Mean Squared Error')
+    plt.xlabel(x_axis_label, fontsize=12)
+    plt.ylabel('Mean Squared Error', fontsize=12)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
     plt.legend()
     plt.savefig(filename)
     plt.show()
@@ -276,30 +278,47 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambd,n=50,verbose=False):
 
 
 def plot_bias_variance_tradeoff_polynomial_degree_sklearn(x, y, p=65, bootstraps=200):
+    """
+    Plots and saves a figure of bias-variance tradeoff with different polynomial degrees using scikit-lean
 
-    x_train, x_test, y_train, y_test = train_test_split(
-        x[:, None], y, random_state=1, test_size=0.2
-    )
+    Parameters
+    ----------
+    x: numpy array shape (n)
+    Actual data x
 
+    y: numpy array shape (n)
+    Runge's function, use with noise 
+
+    p: int
+    Polynomial degree
+
+    bootstraps: int
+    By default 200 
+    """
+
+    # split test and train data 
+    x_train, x_test, y_train, y_test = train_test_split(x[:, None], y, random_state=1, test_size=0.2)
+
+    # for looping
     degrees = np.arange(1, p + 1, step=5)
 
+    # initialize 
     mses = np.zeros(degrees.shape)
     variances = np.zeros(degrees.shape)
     biases = np.zeros(degrees.shape)
 
     for i, degree in enumerate(degrees):
-        model = make_pipeline(
-            PolynomialFeatures(degree=degree),
-            LinearRegression(fit_intercept=True)
-        )
+
+        # Combine x transformation and model
+        model = make_pipeline(PolynomialFeatures(degree=degree),LinearRegression(fit_intercept=True))
 
         preds = []  # will hold predictions on x_test for each bootstrap (shape per item: (n_test,))
-        for j in range(bootstraps):
-            x_train_re, y_train_re = resample(
-                x_train, y_train,
-                random_state=j
-            )
 
+        for j in range(bootstraps):
+            x_train_re, y_train_re = resample(x_train, y_train, random_state=j) # bootstrap resampling
+
+            # fit your model on the sampled data
+            # make predictions on the test data
             model.fit(x_train_re, y_train_re)
             preds.append(model.predict(x_test))  # (n_test,)
 
@@ -310,21 +329,47 @@ def plot_bias_variance_tradeoff_polynomial_degree_sklearn(x, y, p=65, bootstraps
         variances[i] = variance(preds)
         biases[i] = squared_bias(y_test, preds)
 
-    plt.plot(degrees, mses, label="MSE (test)")
-    plt.plot(degrees, variances, label="Variance (test)")
-    plt.plot(degrees, biases, label="Bias^2 (test)")
-    plt.legend()
+    # plot and save
+    plt.figure(figsize=(6, 4))
+    plt.plot(degrees, mses, label="MSE")
+    plt.plot(degrees, variances, label="Variance")
+    plt.plot(degrees, biases, label="Bias^2")
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend(fontsize=12)
+    plt.ylabel("Prediction error (logarithmic scale)", fontsize=12)
+    plt.xlabel("Polynomial degree", fontsize=12)
     plt.yscale("log")
+    plt.savefig("Bias_variance_tradeoff_degree_scikit_learn.png", bbox_inches='tight')
     plt.show()
+   
 
-def plot_bias_variance_tradeoff_datapoints(x, y, max_n=500, degree=20, bootstraps = 200):
+def plot_bias_variance_tradeoff_datapoints_sklearn(x, y, max_n=500, degree=15, bootstraps = 200):
     """
-    Plots MSE, bias and variance for different numbers of datapoints (bias-variance tradeoff)
-    """
-    x_train, x_test, y_train, y_test = train_test_split(
-        x[:, None], y, random_state=1, test_size=0.2
-    )
+    Plots and saves a figure of bias-variance tradeoff with different number of data points using scikit-lean
 
+    Parameters
+    ----------
+    x: numpy array shape (n)
+    Actual data x
+
+    y: numpy array shape (n)
+    Runge's function, use with noise 
+
+    max_n: int
+    Maximum number of data points
+
+    degree: int
+    Polynomial degree, by default 15
+
+    bootstraps: int
+    By default 200 
+    """
+
+    # split test and train data
+    x_train, x_test, y_train, y_test = train_test_split(x[:, None], y, random_state=1, test_size=0.2)
+
+    # sapmling every 10th to make it faster
     n_test = np.linspace(10, max_n, 10).astype(int)
 
     mses = np.zeros(n_test.shape)
@@ -339,7 +384,7 @@ def plot_bias_variance_tradeoff_datapoints(x, y, max_n=500, degree=20, bootstrap
         model = make_pipeline(PolynomialFeatures(degree=degree), LinearRegression(fit_intercept=True))
 
         for b in range(bootstraps):
-            X_train_re, y_train_re = resample(x_train, y_train, n_samples=n) # bootstrap resampling, taking 
+            X_train_re, y_train_re = resample(x_train, y_train, n_samples=n) # bootstrap resampling 
 
             # fit your model on the sampled data
             # make predictions on the test data
@@ -350,10 +395,154 @@ def plot_bias_variance_tradeoff_datapoints(x, y, max_n=500, degree=20, bootstrap
         variances[i] = variance(predictions)
         mses[i] = MSE(y_test[:, None], predictions)
 
-    plt.plot(n_test, mses, label="MSE (test)")
-    plt.plot(n_test, variances, label="Variance (test)")
-    plt.plot(n_test, biases, label="Bias^2 (test)")
-    plt.legend()
+    #plot and save figure
+    plt.figure(figsize=(6, 4))
+    plt.plot(n_test, mses, label="MSE")
+    plt.plot(n_test, variances, label="Variance")
+    plt.plot(n_test, biases, label="Bias^2")
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend(fontsize=12)
     plt.yscale("log")
-    plt.xlabel("Number of datapoints")
+    plt.xlabel("Number of datapoints", fontsize=12)
+    plt.savefig("Bias_variance_tradeoff_datapoints_scikit_learn.png", bbox_inches='tight')
+    plt.show()
+
+    
+def plot_bias_variance_tradeoff_polynomial_degree(X_train_noise, y_train_noise, X_test_noise, y_test_noise, bootstraps=200, use_intercept=True):
+    """
+    Plots and saves a figure of bias-variance tradeoff with different polynomial degrees (not using scikit-learn)
+
+    Parameters
+    ----------
+    X_train_noise : numpy array shape (n,f)
+    Training feature matrix with noise
+
+    y_train_noise : numpy array shape (n)
+    Training target vector
+
+    X_test_noise : numpy array shape (n,f)
+    Test feature matrix with noise
+
+    y_test_noise : numpy array shape (n)
+    Test target vector   
+
+    bootstraps: int
+    By default 200 
+
+    use_intercept: Bool
+    Choose if using the intercept or not 
+    """   
+    p = X_train_noise.shape[1] - (1 if use_intercept else 0)
+
+    degrees = np.arange(1, p + 1, step=5)
+
+    mses = np.zeros(degrees.shape)
+    variances = np.zeros(degrees.shape)
+    biases = np.zeros(degrees.shape)
+
+    for i, degree in enumerate(degrees):
+        # Extract the relevant columns from design matrix for the current degree
+        X_train_sliced = X_train_noise[:, :degree] 
+        X_test_sliced = X_test_noise[:, :degree]
+
+        preds = []  # will hold predictions on x_test for each bootstrap (shape per item: (n_test,))
+        for j in range(bootstraps):
+            X_train_re, y_train_re = resample(X_train_sliced,y_train_noise,random_state=j)
+
+            # OLS Regression
+            #theta_OLS = OLS_parameters(X_train_re, y_train_re) # this way is unstable when high polynomial degrees, that's why using the one below
+            theta_OLS = np.linalg.lstsq(X_train_re, y_train_re, rcond=None)[0]
+            y_tilde_test = X_test_sliced @ theta_OLS
+            preds.append(y_tilde_test)
+
+        # Stack to shape (n_test, bootstraps)
+        preds = np.column_stack(preds)
+
+        mses[i] = MSE(y_test_noise[:, None], preds)
+        variances[i] = variance(preds)
+        biases[i] = squared_bias(y_test_noise, preds)
+
+    # plot and save figure 
+    plt.figure(figsize=(6, 4))
+    plt.plot(degrees, mses, label="MSE")
+    plt.plot(degrees, variances, label="Variance")
+    plt.plot(degrees, biases, label="Bias^2")
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend(fontsize=12)
+    plt.xlabel("Polynomial degree", fontsize=12)
+    plt.yscale("log")
+    plt.savefig("Bias_variance_tradeoff_degree.png", bbox_inches='tight')
+    plt.show()
+
+
+def plot_bias_variance_tradeoff_datapoints(X_train_noise, y_train_noise, X_test_noise, y_test_noise, max_n=500, degree=15, bootstraps=200):
+    """
+    Plots and saves a figure of bias-variance tradeoff with different number of data points (not using scikit-learn)
+
+    Parameters
+    ----------
+    X_train_noise : numpy array shape (n,f)
+    Training feature matrix with noise
+
+    y_train_noise : numpy array shape (n)
+    Training target vector
+
+    X_test_noise : numpy array shape (n,f)
+    Test feature matrix with noise
+
+    y_test_noise : numpy array shape (n)
+    Test target vector   
+
+    max_n: int
+    Maximum number of data points
+
+    degree: int
+    Polynomial degree, by default 15
+
+    bootstraps: int
+    By default 200 
+    """ 
+
+    n_test = np.linspace(10, max_n, 50).astype(int)
+
+    mses = np.zeros(n_test.shape)
+    variances = np.zeros(n_test.shape)
+    biases = np.zeros(n_test.shape)
+
+    # Extract the relevant columns from design matrix for the current degree
+    X_train_sliced = X_train_noise[:, :degree] 
+    X_test_sliced = X_test_noise[:, :degree]
+
+    for i, n in enumerate(n_test): # loop through the data points
+        # initialize predictions
+        preds = []
+        for b in range(bootstraps):
+            X_train_re, y_train_re = resample(X_train_sliced, y_train_noise, n_samples=n) # bootstrap resampling, taking 
+
+            # OLS Regression
+            theta_OLS = OLS_parameters(X_train_re, y_train_re)
+            #theta_OLS = np.linalg.lstsq(X_train_re, y_train_re, rcond=None)[0]
+            y_tilde_test = X_test_sliced @ theta_OLS
+            preds.append(y_tilde_test)
+
+        # Stack to shape (n_test, bootstraps)
+        preds = np.column_stack(preds)
+
+        biases[i] = squared_bias(y_test_noise, preds)
+        variances[i] = variance(preds)
+        mses[i] = MSE(y_test_noise[:, None], preds)
+
+    #plot and save figure
+    plt.figure(figsize=(6, 4))
+    plt.plot(n_test, mses, label="MSE")
+    plt.plot(n_test, variances, label="Variance")
+    plt.plot(n_test, biases, label="Bias^2")
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend(fontsize=12)
+    plt.yscale("log")
+    plt.xlabel("Number of datapoints", fontsize=12)
+    plt.savefig("Bias_variance_tradeoff_datapoints.png", bbox_inches='tight')
     plt.show()
