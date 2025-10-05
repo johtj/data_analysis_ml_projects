@@ -9,6 +9,7 @@ from source.GD_OLS import gradient_descent_OLS,gradient_descent_OLS_momentum,ADA
 from source.GD_Ridge import gradient_descent_ridge,gradient_descent_ridge_momentum,ADAgrad_Ridge,RMSprop_Ridge,ADAM_Ridge
 from source.stochastic_OLS import stochastic_GD_OLS,SGD_OLS_momentum,SGD_OLS_ADAgrad,SGD_OLS_RMSprop,SGD_OLS_ADAM
 from source.stochastic_Ridge import stochastic_GD_Ridge,SGD_Ridge_momentum,SGD_Ridge_ADAgrad,SGD_Ridge_RMSprop,SGD_Ridge_ADAM
+import matplotlib.ticker as ticker
 
 
 
@@ -272,6 +273,9 @@ def explore_lambda(X_train, X_test, y_train, y_test, lambdas, verbose=False):
 
     r2_test: list
         list of R2 values for test data
+    
+    theta_ridge_list: list
+        list of theta values
 
     Parameters
     ----------
@@ -689,7 +693,7 @@ def plot_theta_by_polynomials(thetas, degree, n_datapoints):
 
     """
     # ensure integer values at x-axis
-    import matplotlib.ticker as ticker
+    
 
     plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
 
@@ -706,7 +710,12 @@ def plot_theta_by_polynomials(thetas, degree, n_datapoints):
     plt.savefig(f'Theta values by polynomial degree {degree} - OLS regression - Datapoints {n_datapoints}', bbox_inches='tight')
     plt.show()
     plt.close()
+
+
+
     
+    
+
 def explore_eta(X_train,X_test,y_train,y_test,num_iters,eta_list,lam,verbose=False):
     
     mse_train_OLS = []
@@ -1013,23 +1022,9 @@ def explore_n_epochs_stochasticGD_OLS(num_epochs,num_points,size_minibatch,eta,x
 
         fig.suptitle(f"Results for various stochastic gradient descent using OLS \n eta: {eta}, number of epochs: {epochs}")
         fig.savefig(f"../figures/gradient_descent/gradient_descent_OLS_stochastic_{epochs}_epochs.png")
-    # ensure integer values at x-axis
-    import matplotlib.ticker as ticker
-    plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-
-    for i, theta in enumerate(thetas):
-        plt.plot(range(len(theta)), theta, label=f'Degree {i + 1}', alpha=0.7)
     
-    plt.xlabel('Degree', fontsize=12)
-    plt.ylabel('Theta Value', fontsize=12)
-    # removed title from plotting, code kept in case needed later
-    #plt.title(f'Theta values by polynomial degree {degree} - OLS regression\nDatapoints {n_datapoints}')
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=12)
-    plt.tight_layout(rect=[0, 0, 0.85, 1])  
-    plt.savefig(f'Theta values by polynomial degree {degree} - OLS regression - Datapoints {n_datapoints}', bbox_inches='tight')
-    plt.show()
-    plt.close()
-
+    
+  
 
 
 def plot_theta_by_polynomials_comparison(thetas, degree, n_datapoints, regressions):
@@ -1078,7 +1073,7 @@ def plot_theta_by_polynomials_comparison(thetas, degree, n_datapoints, regressio
     plt.close()
 
 
-def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise, n_lambdas, lambda_value, eta, n_iter):
+def plot_xy_xynoise_ypredicted(x, y, x_train, y_train, y_predicted_rescaled, x_test, n_datapoints, regression_method, poly_degree, noise, n_lambdas=0, lambda_value=0.01, eta=0.001, n_iter=0):
 
     """
     Plot x, y, x_train, y_train and x_test with predicted y_values at original scale.
