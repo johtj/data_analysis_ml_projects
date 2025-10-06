@@ -13,7 +13,7 @@ import matplotlib.ticker as ticker
 
 
 
-def plot_mse(regression_method, degree,  n_datapoints, x_axis_data, mse_train, mse_test, noise=False):
+def plot_mse(method,n,x_axis_data, mse_train, mse_test,x_label,save=False,fname=""):
     """
     Plots the Mean Squared Error (MSE) for different polynomial degrees.
     
@@ -45,37 +45,28 @@ def plot_mse(regression_method, degree,  n_datapoints, x_axis_data, mse_train, m
         Bool to determine if noise is included or not in dataset:
     """
 
-    if noise:
-        noise_text = "with"
-    else:
-        noise_text = "without"
-    
-    if regression_method == "Ridge":
-        x_axis_label = f"Lambdas"
-        n_lambdas = len(x_axis_data)
-        #text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
-        filename = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise - Number of lambdas {n_lambdas} - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
-    elif regression_method == "OLS":
-        x_axis_label = "Polynomial degree"
-        #text = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
-        filename = f'{regression_method} - MSE for Different {x_axis_label} {noise_text} Noise - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
-
+   
     # removed title from plot, but keep code in case needed later
     #plt.title(text)  
-    plt.plot(x_axis_data, mse_train, 'o-',label='MSE train')
-    plt.plot(x_axis_data, mse_test, 'o-', label='MSE test')
-    plt.xlabel(x_axis_label)
+    plt.plot(x_axis_data, mse_train, 'o-',label=f'MSE train {method}')
+    plt.plot(x_axis_data, mse_test, 'o-', label=f'MSE test {method}')
+
+    plt.xlabel(x_label)
     plt.ylabel('Mean Squared Error',fontsize=12)
+
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
+
     plt.legend()
-    plt.savefig(filename, bbox_inches='tight')
+    
+    if save: plt.savefig("../figures/"+fname, bbox_inches='tight')
+
     plt.show()
     plt.close()
 
 
 
-def plot_r2(regression_method, degree, n_datapoints, x_axis_data, r2_train, r2_test, noise=False):
+def plot_r2(method,n,x_axis_data, r2_train, r2_test,x_label,save=False,fname=""):
     """
     Plots the R2 Score for different polynomial degrees.
     
@@ -106,29 +97,20 @@ def plot_r2(regression_method, degree, n_datapoints, x_axis_data, r2_train, r2_t
     noise : Bool
         Bool to determine if noise is included or not in dataset:
     """
-    if noise:
-        noise_text = "with"
-    else:
-        noise_text = "without"
-    
-    if regression_method == "Ridge":
-        x_axis_label = f"Lambdas"
-        n_lambdas = len(x_axis_data)
-        #text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of lambdas {n_lambdas}\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
-        filename = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise - Number of lambdas {n_lambdas} - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
-    elif regression_method == "OLS":
-        x_axis_label = "Polynomial degree"
-        #text = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise\nNumber of data points: {n_datapoints}\nNumber of polynomials {degree}'
-        filename = f'{regression_method} - R2 for Different {x_axis_label} {noise_text} Noise - Number of data points {n_datapoints} - Number of polynomials {degree}.png'
+   
 
     # removed title from plot, but keep code in case needed later
     #plt.title(text)  
-    plt.plot(x_axis_data, r2_train, label='R2 train')
-    plt.plot(x_axis_data, r2_test, label='R2 test')
-    plt.xlabel(x_axis_label)
+    plt.plot(x_axis_data, r2_train,'o-',label=f'R2 train {method}')
+    plt.plot(x_axis_data, r2_test,'o-', label=f'R2 test  {method}')
+
+    plt.xlabel(x_label)
     plt.ylabel('R2')
+
     plt.legend()
-    plt.savefig(filename, bbox_inches='tight')
+
+    if save: plt.savefig("../figures/"+fname, bbox_inches='tight')    
+    
     plt.show()
     plt.close()
 
@@ -829,9 +811,9 @@ def explore_iterations_GD_methods_ridge(ns,eta,lam,x,y,x_train,x_test,X_train,X_
         y_tilde_ad = X_test @ theta_ad
         y_tilde_ADAM = X_test @ theta_ADAM
 
-        fig = plt.figure(figsize=(20,10))
+        fig = plt.figure(figsize=(10,20))
 
-        ax1 = plt.subplot(1,2,1)
+        ax1 = plt.subplot(2,1,1)
         ax1.plot(x,y,label="Runges function")
 
         ax1.scatter(x_test,y_tilde,label="gradient descent")
@@ -849,7 +831,7 @@ def explore_iterations_GD_methods_ridge(ns,eta,lam,x,y,x_train,x_test,X_train,X_
         y_tilde_adt = X_train @ theta_ad
         y_tilde_ADAMt = X_train @ theta_ADAM
 
-        ax2 = plt.subplot(1,2,2)
+        ax2 = plt.subplot(2,1,2)
         ax2.plot(x,y,label="target")
 
         ax2.scatter(x_train,y_tilde_t,label="gradient descent")
@@ -881,9 +863,9 @@ def explore_iterations_GD_methods_OLS(ns,eta,x,y,x_train,x_test,X_train,X_test,y
         y_tilde_ad = X_test @ theta_ad
         y_tilde_ADAM = X_test @ theta_ADAM
 
-        fig = plt.figure(figsize=(20,10))
+        fig = plt.figure(figsize=(10,20))
 
-        ax1 = plt.subplot(1,2,1)
+        ax1 = plt.subplot(2,1,1)
         ax1.plot(x,y,label="target")
 
         ax1.scatter(x_test,y_tilde,label="gradient descent")
@@ -901,7 +883,7 @@ def explore_iterations_GD_methods_OLS(ns,eta,x,y,x_train,x_test,X_train,X_test,y
         y_tilde_adt = X_train @ theta_ad
         y_tilde_ADAMt = X_train @ theta_ADAM
 
-        ax2 = plt.subplot(1,2,2)
+        ax2 = plt.subplot(2,1,2)
         ax2.plot(x,y,label="target")
 
         ax2.scatter(x_train,y_tilde_t,label="gradient descent")
@@ -935,9 +917,9 @@ def explore_n_epochs_stochasticGD_ridge(num_epochs,num_points,size_minibatch,eta
         y_tilde_ad = X_test @ theta_ad
         y_tilde_ADAM = X_test @ theta_ADAM
 
-        fig = plt.figure(figsize=(20,10))
+        fig = plt.figure(figsize=(10,20))
 
-        ax1 = plt.subplot(1,2,1)
+        ax1 = plt.subplot(2,1,1)
         ax1.plot(x,y,label="target")
 
         ax1.scatter(x_test,y_tilde,label="gradient descent")
@@ -955,7 +937,7 @@ def explore_n_epochs_stochasticGD_ridge(num_epochs,num_points,size_minibatch,eta
         y_tilde_adt = X_train @ theta_ad
         y_tilde_ADAMt = X_train @ theta_ADAM
 
-        ax2 = plt.subplot(1,2,2)
+        ax2 = plt.subplot(2,1,2)
         ax2.plot(x,y,label="target")
 
         ax2.scatter(x_train,y_tilde_t,label="gradient descent")
@@ -988,9 +970,9 @@ def explore_n_epochs_stochasticGD_OLS(num_epochs,num_points,size_minibatch,eta,x
         y_tilde_ad = X_test @ theta_ad
         y_tilde_ADAM = X_test @ theta_ADAM
 
-        fig = plt.figure(figsize=(20,10))
+        fig = plt.figure(figsize=(10,20))
 
-        ax1 = plt.subplot(1,2,1)
+        ax1 = plt.subplot(2,1,1)
         ax1.plot(x,y,label="target")
 
         ax1.scatter(x_test,y_tilde,label="gradient descent")
@@ -1008,7 +990,7 @@ def explore_n_epochs_stochasticGD_OLS(num_epochs,num_points,size_minibatch,eta,x
         y_tilde_adt = X_train @ theta_ad
         y_tilde_ADAMt = X_train @ theta_ADAM
 
-        ax2 = plt.subplot(1,2,2)
+        ax2 = plt.subplot(2,1,2)
         ax2.plot(x,y,label="target")
 
         ax2.scatter(x_train,y_tilde_t,label="gradient descent")
