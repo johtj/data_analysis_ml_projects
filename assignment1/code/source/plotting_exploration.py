@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from sklearn.utils import resample
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import KFold
+from source.matrix_creation import polynomial_features
 from source.main_methods import OLS_parameters,Ridge_parameters, lasso_gradient_descent
 from source.errors import MSE,R2,squared_bias, variance
 from source.GD_OLS import gradient_descent_OLS,gradient_descent_OLS_momentum,ADAgrad_OLS,RMSprop_OLS,ADAM_OLS
@@ -730,7 +734,6 @@ def explore_eta(X_train,X_test,y_train,y_test,num_iters,eta_list,lam,verbose=Fal
         mse_test_OLS.append(mse_test_gdOLS)
         mse_train_Ridge.append(mse_train_gdRidge)
         mse_test_Ridge.append(mse_test_gdRidge)
-        print(mse_test_gdOLS)
 
         # Calculate R2 for training and test data
         r2_train_gdOLS = R2(y_train, y_tilde_trainOLS)
@@ -1424,4 +1427,84 @@ def plot_bias_variance_tradeoff_datapoints(X_train_noise, y_train_noise, X_test_
     plt.yscale("log")
     plt.xlabel("Number of datapoints", fontsize=12)
     plt.savefig("Bias_variance_tradeoff_datapoints.png", bbox_inches='tight')
+    plt.show()
+
+def plot_bias_variance_tradeoff_polynomial_degree_kfold(x_noise, y_noise, max_p=25, k = 5, use_intercept=True):
+
+    """
+    Plots and saves a figure of bias-variance tradeoff with different polynomial degrees (not using scikit-learn)
+
+    Parameters
+    ----------
+    x_noise : numpy array shape (n)
+
+        Data x coordinates
+
+    y_noise : numpy array shape (n)
+
+        Data y coordinates
+
+    max_p: int
+
+        The maximum polynomial degree to test.
+
+    k: int
+
+        k-fold number
+
+    use_intercept: Bool
+
+        Choose if using the intercept or not 
+    """  
+    degrees = np.arange(1, max_p + 1, step=2)
+    mses = np.zeros(degrees.shape)
+    variances = np.zeros(degrees.shape)
+    biases = np.zeros(degrees.shape)
+
+    # make the k-fold object
+    kf = KFold(n_splits=k, shuffle=True, random_state=2025)
+
+    # loop through degrees
+    for i, degree in enumerate(degrees):
+        # make feature matrix
+        X_noise = polynomial_features(x=x_noise, p=degree, intercept=use_intercept)
+
+        preds = []
+
+        # run the k-fold split and estimate OLS parameters
+        for train_index, test_index in kf.split(X_noise):
+
+            X_train, X_test = X_noise[train_index], X_noise[test_index]
+
+            y_train, y_test = y_noise[train_index], y_noise[test_index]
+
+            theta_OLS = np.linalg.lstsq(X_train, y_train, rcond=None)[0]
+
+            y_tilde_test = X_test @ theta_OLS
+
+            # save both the test data and predictions
+            preds.append([y_test, y_tilde_test])
+
+        # Shape: (n_points, test or pred, k-fold)
+
+        preds = np.transpose(preds)
+
+        mses[i] = MSE(preds[:, 0, :], preds[:, 1, :])
+        variances[i] = variance(preds[:, 1, :])
+
+        squared_bias_ = np.mean((preds[:, 0, :] - np.mean(preds[:, 1, :], axis=1)[:, None])**2)
+        biases[i] = squared_bias_
+
+
+    # plot and save figure 
+    plt.figure(figsize=(6, 4))
+    plt.plot(degrees, mses, label="MSE")
+    plt.plot(degrees, variances, label="Variance")
+    plt.plot(degrees, biases, label="Bias^2")
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.legend(fontsize=12)
+    plt.xlabel("Polynomial degree", fontsize=12)
+    plt.yscale("log")
+    plt.savefig("Bias_variance_tradeoff_k_fold.png", bbox_inches='tight')
     plt.show()
