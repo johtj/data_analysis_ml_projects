@@ -1,8 +1,39 @@
 import numpy as np
 
 def stochastic_GD_OLS(X,y,n,M,n_epochs,eta):
-    #n = num pts
-    #M = size minibatches
+    """
+    Calculates the optimal parameters, theta, using the 
+    ordinary least squares method and stochastic gradient descent
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+    
+    eta : float
+        learning rate
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+
+    
+    """
 
     m = int(n/M) #number of minibatches
 
@@ -30,6 +61,43 @@ def stochastic_GD_OLS(X,y,n,M,n_epochs,eta):
 
 
 def SGD_OLS_momentum(X,y,n,M,n_epochs,eta,momentum):
+    """
+    Calculates the optimal parameters, theta, using the 
+    ordinary least squares method and stochastic gradient descent
+    with momentum.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+    
+    eta : float
+        gradient descent parameter
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+
+    momentum: float
+            momentum weight
+
+    
+    """
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -59,12 +127,42 @@ def SGD_OLS_momentum(X,y,n,M,n_epochs,eta,momentum):
 
     return theta
 
-    # Initialize weights for gradient descent
-    theta_gdOLS = np.zeros(n_features)
-    change = 0.0
-    n = X.shape[0]
 
 def SGD_OLS_ADAgrad(X,y,n,M,n_epochs,eta):
+    """    
+    Calculates the optimal parameters, theta, using the 
+    ordinary least squares method and stochastic gradient descent
+    with adaptive learning rate using ADAgrad.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+    
+    eta : float
+        gradient descent parameter
+    
+    """
+
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -100,6 +198,39 @@ def SGD_OLS_ADAgrad(X,y,n,M,n_epochs,eta):
     return theta
 
 def SGD_OLS_RMSprop(X,y,n,M,n_epochs,eta):
+    """    
+    Calculates the optimal parameters, theta, using the 
+    ordinary least squares method and stochastic gradient descent
+    with adaptive learning rate using RMSprop.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+    
+    eta : float
+        gradient descent parameter
+    
+    """
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -137,6 +268,39 @@ def SGD_OLS_RMSprop(X,y,n,M,n_epochs,eta):
     return theta
 
 def SGD_OLS_ADAM(X,y,n,M,n_epochs,eta):
+    """    
+    Calculates the optimal parameters, theta, using the 
+    ordinary least squares method and stochastic gradient descent
+    with adaptive learning rate using ADAM.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+    
+    eta : float
+        gradient descent parameter
+    
+    """
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])

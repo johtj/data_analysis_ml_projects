@@ -14,6 +14,8 @@ from source.GD_Ridge import gradient_descent_ridge,gradient_descent_ridge_moment
 from source.stochastic_OLS import stochastic_GD_OLS,SGD_OLS_momentum,SGD_OLS_ADAgrad,SGD_OLS_RMSprop,SGD_OLS_ADAM
 from source.stochastic_Ridge import stochastic_GD_Ridge,SGD_Ridge_momentum,SGD_Ridge_ADAgrad,SGD_Ridge_RMSprop,SGD_Ridge_ADAM
 import matplotlib.ticker as ticker
+from matplotlib.textpath import TextPath
+from matplotlib.font_manager import FontProperties
 
 
 
@@ -524,8 +526,7 @@ def plot_heatmap_lasso(mse_or_r2, mse_array, lambdas, etas, degree, n_datapoints
 
 
 def heatmap_variable_colwidth(mse_array, lambdas, etas, mse_or_r2, degree, n_datapoints, n_iter):
-    from matplotlib.textpath import TextPath
-    from matplotlib.font_manager import FontProperties
+ 
     """
     Plotting of heatmap from mse values from lasso_grid_search
     Depends on number of lambda values to explore and learning rate (etas)
@@ -703,6 +704,56 @@ def plot_theta_by_polynomials(thetas, degree, n_datapoints):
     
 
 def explore_eta(X_train,X_test,y_train,y_test,num_iters,eta_list,lam,verbose=False):
+    """
+    Explores the effect of eta on MSE and R2 for
+    both training and test datasets using Gradient descent with Ridge regression
+    and OLS.
+
+    Returns
+    -------
+
+    etas: list
+        list of eta values explored
+    
+    mse_train: list
+        list of MSE values for training data
+    
+    mse_test: list
+        list of MSE values for test data
+
+    r2_train: list
+        list of R2 values for training data
+
+    r2_test: list
+        list of R2 values for test data
+    
+    theta_ridge_list: list
+        list of theta values
+
+    Parameters
+    ----------
+    X_train : numpy array shape (n,f)
+        Training feature matrix
+
+    X_test : numpy array shape (n,f)
+        Test feature matrix   
+
+    y_train : numpy array shape (n)
+        Training target vector
+
+    y_test : numpy array shape (n)
+        Test target vector
+    
+    eta_list : numpy array shape (n)
+        eta values
+
+    lam : float
+        lambdas for GD ridge
+    
+    verbose : Bool
+        Include verbose output from function, default set to false
+   
+    """
     
     mse_train_OLS = []
     mse_test_OLS = []
@@ -749,8 +800,56 @@ def explore_eta(X_train,X_test,y_train,y_test,num_iters,eta_list,lam,verbose=Fal
     return eta_list,mse_train_OLS,mse_test_OLS,mse_train_Ridge,mse_test_Ridge,r2_train_gdOLS,r2_test_Ridge
 
 def explore_n(X_train,X_test,y_train,y_test,iter_list,lam,eta,verbose=False):
-    # Hyperparameters
-    
+    """
+    Explores the effect of the number of iterations on MSE and R2 for
+    both training and test datasets using Gradient descent with Ridge regression
+    and OLS.
+
+    Returns
+    -------
+
+    etas: list
+    list of eta values explored
+
+    mse_train: list
+    list of MSE values for training data
+
+    mse_test: list
+    list of MSE values for test data
+
+    r2_train: list
+    list of R2 values for training data
+
+    r2_test: list
+    list of R2 values for test data
+
+    theta_ridge_list: list
+    list of theta values
+
+    Parameters
+    ----------
+    X_train : numpy array shape (n,f)
+    Training feature matrix
+
+    X_test : numpy array shape (n,f)
+    Test feature matrix   
+
+    y_train : numpy array shape (n)
+    Training target vector
+
+    y_test : numpy array shape (n)
+    Test target vector
+
+    iter_list : numpy array shape (n)
+    list of number of iterations tested
+
+    lam : float
+    lambdas for GD ridge
+
+    verbose : Bool
+    Include verbose output from function, default set to false
+
+    """    
 
     mse_train_OLS = []
     mse_test_OLS = []
@@ -797,6 +896,56 @@ def explore_n(X_train,X_test,y_train,y_test,iter_list,lam,eta,verbose=False):
     return iter_list,mse_train_OLS,mse_test_OLS,mse_train_Ridge,mse_test_Ridge,r2_train_gdOLS,r2_test_Ridge
 
 def explore_iterations_GD_methods_ridge(ns,eta,lam,x,y,x_train,x_test,X_train,X_test,y_train):
+    """
+    Explores the effect of the number of iterations on MSE and R2 for
+    both training and test datasets using Gradient descent with Ridge regression.
+    For different learning rate methods.
+
+    Returns
+    -------
+
+    etas: list
+    list of eta values explored
+
+    mse_train: list
+    list of MSE values for training data
+
+    mse_test: list
+    list of MSE values for test data
+
+    r2_train: list
+    list of R2 values for training data
+
+    r2_test: list
+    list of R2 values for test data
+
+    theta_ridge_list: list
+    list of theta values
+
+    Parameters
+    ----------
+    X_train : numpy array shape (n,f)
+    Training feature matrix
+
+    X_test : numpy array shape (n,f)
+    Test feature matrix   
+
+    y_train : numpy array shape (n)
+    Training target vector
+
+    y_test : numpy array shape (n)
+    Test target vector
+
+    iter_list : numpy array shape (n)
+    list of number of iterations tested
+
+    lam : float
+    lambdas for GD ridge
+
+    verbose : Bool
+    Include verbose output from function, default set to false
+
+    """    
 
     for n in ns:
 
@@ -850,6 +999,54 @@ def explore_iterations_GD_methods_ridge(ns,eta,lam,x,y,x_train,x_test,X_train,X_
         fig.savefig(f"../figures/gradient_descent/gradient_descent_ridge_{n}_iterations.png")
 
 def explore_iterations_GD_methods_OLS(ns,eta,x,y,x_train,x_test,X_train,X_test,y_train):
+    """
+    Explores the effect of the number of iterations on MSE and R2 for
+    both training and test datasets using Gradient descent with OLS.
+    For different learning rate methods.
+
+    Returns
+    -------
+
+    etas: list
+    list of eta values explored
+
+    mse_train: list
+    list of MSE values for training data
+
+    mse_test: list
+    list of MSE values for test data
+
+    r2_train: list
+    list of R2 values for training data
+
+    r2_test: list
+    list of R2 values for test data
+
+    theta_ridge_list: list
+    list of theta values
+
+    Parameters
+    ----------
+    X_train : numpy array shape (n,f)
+    Training feature matrix
+
+    X_test : numpy array shape (n,f)
+    Test feature matrix   
+
+    y_train : numpy array shape (n)
+    Training target vector
+
+    y_test : numpy array shape (n)
+    Test target vector
+
+    iter_list : numpy array shape (n)
+    list of number of iterations tested
+
+
+    verbose : Bool
+    Include verbose output from function, default set to false
+
+    """    
     for n in ns:
 
         theta = gradient_descent_OLS(X_train,y_train,eta,n)
@@ -903,6 +1100,56 @@ def explore_iterations_GD_methods_OLS(ns,eta,x,y,x_train,x_test,X_train,X_test,y
 
 
 def explore_n_epochs_stochasticGD_ridge(num_epochs,num_points,size_minibatch,eta,lam,x,y,x_train,x_test,X_train,X_test,y_train):
+    """
+    Explores the effect of the number of iterations on MSE and R2 for
+    both training and test datasets using Stochastic Gradient descent with Ridge regression.
+    For different learning rate methods.
+
+    Returns
+    -------
+
+    etas: list
+    list of eta values explored
+
+    mse_train: list
+    list of MSE values for training data
+
+    mse_test: list
+    list of MSE values for test data
+
+    r2_train: list
+    list of R2 values for training data
+
+    r2_test: list
+    list of R2 values for test data
+
+    theta_ridge_list: list
+    list of theta values
+
+    Parameters
+    ----------
+    X_train : numpy array shape (n,f)
+    Training feature matrix
+
+    X_test : numpy array shape (n,f)
+    Test feature matrix   
+
+    y_train : numpy array shape (n)
+    Training target vector
+
+    y_test : numpy array shape (n)
+    Test target vector
+
+    iter_list : numpy array shape (n)
+    list of number of iterations tested
+
+    lam : float
+    lambdas for GD ridge
+
+    verbose : Bool
+    Include verbose output from function, default set to false
+
+    """  
 
     for epochs in num_epochs:
 
@@ -956,7 +1203,54 @@ def explore_n_epochs_stochasticGD_ridge(num_epochs,num_points,size_minibatch,eta
         fig.savefig(f"../figures/gradient_descent/gradient_descent_ridge_stochastic_{epochs}_epochs.png")
         
 def explore_n_epochs_stochasticGD_OLS(num_epochs,num_points,size_minibatch,eta,x,y,x_train,x_test,X_train,X_test,y_train):
-    
+    """
+    Explores the effect of the number of iterations on MSE and R2 for
+    both training and test datasets using stochastic Gradient descent with OLS.
+    For different learning rate methods.
+
+    Returns
+    -------
+
+    etas: list
+    list of eta values explored
+
+    mse_train: list
+    list of MSE values for training data
+
+    mse_test: list
+    list of MSE values for test data
+
+    r2_train: list
+    list of R2 values for training data
+
+    r2_test: list
+    list of R2 values for test data
+
+    theta_ridge_list: list
+    list of theta values
+
+    Parameters
+    ----------
+    X_train : numpy array shape (n,f)
+    Training feature matrix
+
+    X_test : numpy array shape (n,f)
+    Test feature matrix   
+
+    y_train : numpy array shape (n)
+    Training target vector
+
+    y_test : numpy array shape (n)
+    Test target vector
+
+    iter_list : numpy array shape (n)
+    list of number of iterations tested
+
+
+    verbose : Bool
+    Include verbose output from function, default set to false
+
+    """    
     for epochs in num_epochs:
 
         theta = stochastic_GD_OLS(X_train,y_train,num_points,size_minibatch,epochs,eta)

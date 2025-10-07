@@ -21,9 +21,6 @@ def gradient_descent_OLS(X,y,eta,num_iters):
             Y values of the data set. 
         
         eta : int
-            gradient descent parameter
-    
-        lam : int
             learning rate
         
         num_iters : int
@@ -51,7 +48,7 @@ def gradient_descent_OLS(X,y,eta,num_iters):
 def gradient_descent_OLS_momentum(X,y,eta,num_iters,momentum):
     """
         Calculates the optimal parameters, theta, using the 
-        ordinary least squares method and gradient descent
+        ordinary least squares method and gradient descent with momentum
 
         Returns
         -------
@@ -69,16 +66,14 @@ def gradient_descent_OLS_momentum(X,y,eta,num_iters,momentum):
             Y values of the data set. 
         
         eta : int
-            gradient descent parameter
-    
-        lam : int
             learning rate
         
         num_iters : int
             number of iterations
+        
+        momentum: float
+            momentum weight
 
-        n_features : int
-            number of features in feature matrix
     """
     
     # Initialize weights for gradient descent
@@ -103,20 +98,34 @@ def gradient_descent_OLS_momentum(X,y,eta,num_iters,momentum):
     return theta_gdOLS
 
 def ADAgrad_OLS(X,y,eta,num_iters):
-    '''
-    glob_eta = 0
-    initial_theta = 0 
-    small_constant = 10^{-7} # for numerical stability
-    r = 0 #gradient accumulation variable
+    """
+        Calculates the optimal parameters, theta, using the 
+        ordinary least squares method and gradient descent with 
+        adaptive learning rate using ADAgrad_OLS
 
-    while not stopping:
-        sample mini batch {x(1), ... , x(m)} with correspdoning targets y(i)
-        compute gradient g = OLS_grad
-        accumulated squared gradient r = r + g @ g
-        compute update update = (global_eta / small_constant + np.sqrt(r)) @ g
-        apply theta = theta + update
+        Returns
+        -------
+        theta_gdOLS : numpy array shape (n)
+            the optimal parameters, theta as given by the
+            OLS method.
 
-    '''
+        Parameters
+        ----------
+        X : numpy array shape (n,f)
+            Feature matrix for the data, where n is the number
+            of data points and f is the number of features.
+
+        y : numpy array shape (n)
+            Y values of the data set. 
+        
+        eta : int
+            learning rate
+        
+        num_iters : int
+            number of iterations
+
+    """
+    
     # Initialize weights for gradient descent
     theta_gdOLS = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
@@ -142,20 +151,33 @@ def ADAgrad_OLS(X,y,eta,num_iters):
 
 def RMSprop_OLS(X,y,eta,num_iters):
     '''
-    global_eta = 0
-    decay_rate = 0
-    initial_teta = 0 
-    small_cosntant = 10^{-6} #used to stabilize division by small numbers
-    accumulation variable r = 0
+        Calculates the optimal parameters, theta, using the 
+        ordinary least squares method and gradient descent with 
+        adaptive learning rate using RMSprop_OLS
+   
+        Returns
+        -------
+        theta_gdOLS : numpy array shape (n)
+            the optimal parameters, theta as given by the
+            OLS method.
 
-    while not stopping:
-        minibatch
-        compute gradient g = OLS_grad
-        accumulate squared gradient r = decay_rate * r + (1-decay_rate) * g @ g
-        compute update update = (global_eta / small_constant + np.sqrt(r)) @ g
-        apply theta = theta + update
+        Parameters
+        ----------
+        X : numpy array shape (n,f)
+            Feature matrix for the data, where n is the number
+            of data points and f is the number of features.
+
+        y : numpy array shape (n)
+            Y values of the data set. 
+        
+        eta : int
+            learning rate
+        
+        num_iters : int
+            number of iterations
+      
     '''
-        # Initialize weights for gradient descent
+    # Initialize weights for gradient descent
     theta_gdOLS = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     decay_rate = 0
@@ -181,28 +203,32 @@ def RMSprop_OLS(X,y,eta,num_iters):
 
 def ADAM_OLS(X,y,eta,num_iters):
     '''
-    eta = 0.001 (suggested default)
-    decay1 = 0.9 
-    decay2 = 0.999 exponential decay rates for moment estimates 
-    small constant = 10^{8} for numberical stabilization
+        Calculates the optimal parameters, theta, using the 
+        ordinary least squares method and gradient descent with 
+        adaptive learning rate using ADAM
+   
+        Returns
+        -------
+        theta_gdOLS : numpy array shape (n)
+            the optimal parameters, theta as given by the
+            OLS method.
 
-    initial theta = 0
-    s = 0, r = 0 #1st & 2nd moment variables
-    t  = 0 #time step
+        Parameters
+        ----------
+        X : numpy array shape (n,f)
+            Feature matrix for the data, where n is the number
+            of data points and f is the number of features.
 
-    while not stopping:
-        minibatch
-        compute gradient g = OLS_grad
-        update biased first moment estimate s = decay1 * s  + (1-decay1)*g
-        update biased second moment r = decay2*r + (1-decay2)*g
-
-        correct bias in 1st mement s_debias = s / (1-decay1^{t})
-        correct bias in 2nd moment r_debias = r / (1-decay2^{t})
-
-        compute update = -eta*(s_debias/np.sqrt(r_debias)+small_constant)
-        apply update theta = theta + update  
+        y : numpy array shape (n)
+            Y values of the data set. 
+        
+        eta : int
+            learning rate
+        
+        num_iters : int
+            number of iterations
     '''
-            # Initialize weights for gradient descent
+    # Initialize weights for gradient descent
     theta_gdOLS = np.zeros(np.shape(X)[1]) #initial theta
     n = X.shape[0]
     decay1= 0.9

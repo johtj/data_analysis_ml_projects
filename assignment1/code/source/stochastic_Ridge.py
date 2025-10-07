@@ -1,6 +1,42 @@
 import numpy as np
 
 def stochastic_GD_Ridge(X,y,n,M,n_epochs,eta,lam):
+    """
+    Calculates the optimal parameters, theta, using the 
+    ridge regression method and stochastic gradient descent
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+    
+    eta : float
+        learning rate
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+
+    lam: float
+            lambda for ridge regression
+    
+    """
+
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -28,6 +64,46 @@ def stochastic_GD_Ridge(X,y,n,M,n_epochs,eta,lam):
 
 
 def SGD_Ridge_momentum(X,y,n,M,n_epochs,eta,lam,momentum):
+    """
+    Calculates the optimal parameters, theta, using the 
+    ridge regression method and stochastic gradient descent
+    with momentum.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+    
+    eta : float
+        gradient descent parameter
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+    
+    lam: float
+            lambda for ridge regression
+
+    momentum: float
+            momentum weight
+
+    
+    """
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -61,6 +137,43 @@ def SGD_Ridge_momentum(X,y,n,M,n_epochs,eta,lam,momentum):
     
 
 def SGD_Ridge_ADAgrad(X,y,n,M,n_epochs,eta,lam):
+    """    
+    Calculates the optimal parameters, theta, using the 
+    ridge regression method and stochastic gradient descent
+    with adaptive learning rate using ADAgrad.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+    
+    eta : float
+        gradient descent parameter
+
+    lam: float
+            lambda for ridge regression
+    
+    """
+
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -95,6 +208,42 @@ def SGD_Ridge_ADAgrad(X,y,n,M,n_epochs,eta,lam):
     return theta
 
 def SGD_Ridge_RMSprop(X,y,n,M,n_epochs,eta,lam):
+    """    
+    Calculates the optimal parameters, theta, using the 
+    ridge regression method and stochastic gradient descent
+    with adaptive learning rate using RMSprop.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+    
+    eta : float
+        gradient descent parameter
+    
+    lam: float
+            lambda for ridge regression
+    
+    """
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
@@ -131,6 +280,42 @@ def SGD_Ridge_RMSprop(X,y,n,M,n_epochs,eta,lam):
     return theta
 
 def SGD_Ridge_ADAM(X,y,n,M,n_epochs,eta,lam):
+    """    
+    Calculates the optimal parameters, theta, using the 
+    ridge regression method and stochastic gradient descent
+    with adaptive learning rate using ADAM.
+
+    Returns
+    -------
+    theta : numpy array shape (n)
+        the optimal parameters, theta as given by the
+        OLS method.
+
+    Parameters
+    ----------
+    X : numpy array shape (n,f)
+        Feature matrix for the data, where n is the number
+        of data points and f is the number of features.
+
+    y : numpy array shape (n)
+        Y values of the data set. 
+    
+    n : int
+        number data points
+    
+    M : int
+        size of the minibatches
+
+    n_epochs : int
+        number of epocchs for stochastic GD
+    
+    eta : float
+        gradient descent parameter
+
+    lam: float
+            lambda for ridge regression
+    
+    """
     m = int(n/M) #number of minibatches
 
     theta = np.zeros(np.shape(X)[1])
