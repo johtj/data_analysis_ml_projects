@@ -1,3 +1,17 @@
+# CODE FOR CUSTOM MADE NEURAL NETWORK
+
+
+# imports
+import autograd.numpy as np 
+
+# custom imports
+from cost_functions import mse_derivative
+
+
+
+# DELETE ALL NOT BATCH VERSIONS AFTER TESTING ??????
+
+
 
 def create_layers(network_input_size, layer_output_sizes):
     """
@@ -171,7 +185,7 @@ def backpropagation(input, layers, activation_funcs, target, activation_ders, co
     
     cost_der : callable, optional
         A function that computes the derivative of the cost with respect to the output
-        of the network. Defaults to `mse_der`, the derivative of mean squared error.
+        of the network. Defaults to ``, the derivative of mean squared error.
 
     Returns:
     -------
@@ -182,7 +196,7 @@ def backpropagation(input, layers, activation_funcs, target, activation_ders, co
         - dC_db: Gradient of cost w.r.t. biases, same shape as b
     """
 
-    layer_inputs, zs, predict = feed_forward_saver(input, layers, activation_funcs)
+    layer_inputs, zs, predict = feed_forward(input, layers, activation_funcs)
 
     layer_grads = [() for layer in layers]
 
@@ -214,7 +228,7 @@ def backpropagation(input, layers, activation_funcs, target, activation_ders, co
 
 
 # Batched version of backpropagation
-def backpropagation_batch(inputs, layers, activation_funcs, targets, activation_ders, cost_der=mse_der):
+def backpropagation_batch(inputs, layers, activation_funcs, targets, activation_ders, cost_der=mse_derivative):
     # Use the existing feed_forward_batch to get intermediate values
     layer_inputs, zs, predictions = feed_forward_batch(inputs, layers, activation_funcs)
 
@@ -230,7 +244,7 @@ def backpropagation_batch(inputs, layers, activation_funcs, targets, activation_
 
         if i == len(layers) - 1:
             # For last layer we use cost derivative as dC_da(L) can be computed directly
-            dC_da = cost_der(predictions, targets)
+            dC_da = cost_der(predictions, targets)  
         else:
             # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
             (W, b) = layers[i + 1]
@@ -239,7 +253,8 @@ def backpropagation_batch(inputs, layers, activation_funcs, targets, activation_
         dC_dz = dC_da * activation_der(z)
         dC_dW = layer_input.T @ dC_dz
         #dC_dW = np.outer(dC_dz, layer_input)
-        dC_db = dC_dz
+        #dC_db = dC_dz
+        dC_db = np.sum(dC_dz, axis=0) 
 
         layer_grads[i] = (dC_dW, dC_db)
 

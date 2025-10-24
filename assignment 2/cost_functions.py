@@ -1,10 +1,17 @@
-import numpy as np
+# COST FUNCTIONS
+
+import autograd.numpy as np 
 
 def mse(y_true, y_pred):
-    return np.mean((y_true - y_pred) ** 2)
+    diff = (y_pred - y_true)
+    return np.mean(diff ** 2)
 
-def mse_derivative(y_true, y_pred):
-    return y_pred - y_true
+
+
+def mse_derivative(y_pred, y_true):
+    B, K = y_pred.shape  
+    return 2.0 * (y_pred - y_true) / (B * K)
+
 
 
 
@@ -27,12 +34,17 @@ def CostCrossEntropy(target):
 
 
 
+
+
+# ------> IS THIS FUNCTION NEEDED? For testing gradients?
 def cost(layers, input, activation_funcs, target):
 
     """
     Computes the cost (error) between the predicted output of a feedforward neural network
     and the target output.
 
+    
+    
     Parameters:
     ----------
     layers : list of tuples
@@ -54,5 +66,5 @@ def cost(layers, input, activation_funcs, target):
         the predicted output and the target.
     """
 
-    predict = feed_forward(input, layers, activation_funcs)
+    predict = feed_forward_batch(input, layers, activation_funcs)
     return mse(predict, target)
