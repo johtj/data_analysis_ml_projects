@@ -90,14 +90,7 @@ class NN:
         """
         self.a_matrices = list()
         self.z_matrices = list()
-
-        #if X is just a vector restructure into matix
-        if len(X.shape) == 1:
-            X = X.reshape((1,X.shape[0]))
     
-        layers_inputs = []
-        zs = []
-
         a = X
         self.a_matrices.append(a)
         self.z_matrices.append(a)
@@ -112,14 +105,44 @@ class NN:
                 else:
                     raise ValueError(f"Bias has unexpected shape {b.shape}")
                 
-            z = a @ W + b                 
+            z = a @ W + b    
+            self.z_matrices.append(z)
+
             a = activation_func(z)
+            self.a_matrices.append(a)
 
-            layers_inputs.append(a)
-            zs.append(z)
 
-        return layers_inputs, zs, a
+        return a
     
-    def _backpropagation(self,X,t,lam):
-        pass
-        
+  
+    def backpropagation_batch(self,inputs, predictions , targets, activation_ders, cost_der = cost_functions.mse_derivative):
+        # Use the existing feed_forward_batch to get intermediate values
+
+        # Add the original inputs to the beginning of layer_inputs
+        layer_inputs = [inputs] + self.a_matrices
+
+        layer_grads = [None] * len(self.weights)
+        #dC_da = cost_der(predictions, targets)
+
+        # We loop over the layers, from the last to the first
+        for i in reversed(range(len(self.weights))):
+            layer_input, z, activation_der = layer_inputs[i], self.z_matrices[i], activation_ders[i]
+
+            if i == len(self.weights) - 1:
+                # For last layer we use cost derivative as dC_da(L) can be computed directly
+                dC_da = cost_der(predictions, targets)  
+            else:
+                # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
+                (W, b) = self.weights[i + 1]
+                dC_da = dC_dz @ W.T 
+
+            dC_dz = dC_da * activation_der(z)
+            dC_dW = layer_input.T @ dC_dz
+            #dC_dW = np.outer(dC_dz, layer_input)
+            #dC_db = dC_dz
+            dC_db = np.sum(dC_dz, axis=0) 
+
+            layer_grads[i] = (dC_dW, dC_db)
+
+            return layer_grads
+            
