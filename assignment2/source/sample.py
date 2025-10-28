@@ -407,6 +407,7 @@ class FFNN:
         """
         assert prediction.size == target.size
         return np.average((target == prediction))
+    
     def _set_classification(self):
         """
         Description:
