@@ -2,6 +2,7 @@ import autograd.numpy as np
 from source.activation_functions import activation_functions
 from source.cost_functions import cost_functions
 from typing import Callable
+import source.schedulers as scheduler_methods
 
 
 class NN:
@@ -45,8 +46,29 @@ class NN:
         #where the activation funcs are the same, not having pass only
         #self._set_classification()
 
-    def fit(self):
-        pass
+    def fit(self,
+            X: np.ndarray,
+            t: np.ndarray,
+            scheduler: scheduler_methods.scheduler,
+            batches: int = 1,
+            epochs: int = 100,
+            lam: float = 0,
+            X_val: np.ndarray = None,
+            t_val: np.ndarray = None
+            ):
+        if self.seed is not None:
+            np.random.seed(self.seed)
+
+        val_set = False
+        if X_val is not None and t_val is not None:
+            val_set = True
+
+        train_errors = np.empty(epochs)
+        train_errors.fill(np.nan)
+        val_errors = np.empty(epochs)
+        val_errors.fill(np.nan)
+
+        train_accs = np.em
 
     def predict(self):
         pass
