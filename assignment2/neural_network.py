@@ -111,6 +111,8 @@ def feed_forward(input, layers, activation_funcs):
 # from exercise 5 - week 41, added saving of intermediate values
 def feed_forward_batch(inputs, layers, activation_funcs):
     """
+    Dimensionality check with Copilot
+
     Perform a forward pass through a batched feed-forward neural network.
 
     This function assumes the input has shape (batch_size, in_dim), and each layer
@@ -144,13 +146,25 @@ def feed_forward_batch(inputs, layers, activation_funcs):
     a = inputs  
     for (W, b), activation_func in zip(layers, activation_funcs):
         # Normalize b to row-broadcastable shape in case it's (out_dim,1)
+        # Ensure W is 2D
+        if W.ndim != 2:
+            raise ValueError(f"Weight matrix W must be 2D, got shape {W.shape}")
+
+        # Ensure b is 1D and broadcastable
         if b.ndim == 2:
-            if b.shape[1] == 1: 
-                b = b.ravel()         
+            if b.shape[1] == 1:
+                b = b.ravel()
             elif b.shape[0] == 1:
-                b = b.reshape(-1)      
+                b = b.reshape(-1)
             else:
-                raise ValueError(f"Bias has unexpected shape {b.shape}")
+                raise ValueError(f"Bias b has unexpected shape {b.shape}")
+        elif b.ndim != 1:
+            raise ValueError(f"Bias b must be 1D or 2D, got shape {b.shape}")
+
+        # Check matrix multiplication compatibility
+        if a.shape[1] != W.shape[0]:
+            raise ValueError(f"Incompatible shapes for matrix multiplication: {a.shape} @ {W.shape}")
+
         z = a @ W + b                 
         a = activation_func(z)
 
@@ -205,10 +219,8 @@ def backpropagation(input, layers, activation_funcs, target, activation_ders, co
         layer_input, z, activation_der = layer_inputs[i], zs[i], activation_ders[i]
 
         if i == len(layers) - 1:
-            # For last layer we use cost derivative as dC_da(L) can be computed directly
             dC_da = cost_der(predict, target)
         else:
-            # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
             (W, b) = layers[i + 1]
             dC_da = W.T @ dC_dz
 
@@ -236,24 +248,19 @@ def backpropagation_batch(inputs, layers, activation_funcs, targets, activation_
     layer_inputs = [inputs] + layer_inputs
 
     layer_grads = [None] * len(layers)
-    #dC_da = cost_der(predictions, targets)
 
     # We loop over the layers, from the last to the first
     for i in reversed(range(len(layers))):
         layer_input, z, activation_der = layer_inputs[i], zs[i], activation_ders[i]
 
         if i == len(layers) - 1:
-            # For last layer we use cost derivative as dC_da(L) can be computed directly
             dC_da = cost_der(predictions, targets)  
         else:
-            # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
             (W, b) = layers[i + 1]
             dC_da = dC_dz @ W.T 
 
         dC_dz = dC_da * activation_der(z)
         dC_dW = layer_input.T @ dC_dz
-        #dC_dW = np.outer(dC_dz, layer_input)
-        #dC_db = dC_dz
         dC_db = np.sum(dC_dz, axis=0) 
 
         layer_grads[i] = (dC_dW, dC_db)
