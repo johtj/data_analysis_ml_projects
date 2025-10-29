@@ -36,7 +36,7 @@ def CostCrossEntropy(target):
 """
 
 
-def mse_loss_basic(y_pred, y_true, *, l2=0.0, l1=0.0):
+def mse_loss(y_pred, y_true, *, l2=0.0, l1=0.0):
     """
     Added L1 and l2 term with Copilot
     Basic MSE loss with optional L1 and L2 regularization on predictions.
