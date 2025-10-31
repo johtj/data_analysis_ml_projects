@@ -5,7 +5,7 @@
 import autograd.numpy as np 
 
 # custom imports
-from cost_functions import mse_derivative
+from cost_functions import mse_loss_gradient #mse_derivative
 
 
 
@@ -174,7 +174,7 @@ def feed_forward_batch(inputs, layers, activation_funcs):
     return layers_inputs, zs, a
 
 
-def backpropagation(input, layers, activation_funcs, target, activation_ders, cost_der=mse_derivative):
+def backpropagation(input, layers, activation_funcs, target, activation_ders, cost_der=mse_loss_gradient):
     
     """
     Computes the gradients of the cost function with respect to the weights and biases
@@ -240,7 +240,7 @@ def backpropagation(input, layers, activation_funcs, target, activation_ders, co
 
 
 # Batched version of backpropagation
-def backpropagation_batch(inputs, layers, activation_funcs, targets, activation_ders, cost_der=mse_derivative):
+def backpropagation_batch(inputs, layers, activation_funcs, targets, activation_ders, cost_der=mse_loss_gradient):
     # Use the existing feed_forward_batch to get intermediate values
     layer_inputs, zs, predictions = feed_forward_batch(inputs, layers, activation_funcs)
 
