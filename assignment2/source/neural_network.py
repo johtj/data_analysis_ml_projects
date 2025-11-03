@@ -3,6 +3,8 @@ from source.activation_functions import activation_functions
 from source.cost_functions import cost_functions
 from typing import Callable
 import source.schedulers as scheduler_methods
+from sklearn.utils import resample
+from copy import copy
 
 
 class NN:
@@ -12,9 +14,10 @@ class NN:
 
     """
     def __init__(self,dims: list[int],
-                 activation_func_h: list[Callable],
-                 output_func: Callable = lambda x: x,
+                 activation_funcs: list[Callable],
+                 activation_ders: list[Callable],
                  cost_func: Callable = cost_functions.mse,
+                 cost_der: Callable = cost_functions.mse_derivative,
                  seed: int = None): #if this one throws an error, switch to default val -99999 or something
         
         
@@ -22,13 +25,13 @@ class NN:
         #for each layer dims[0] gives the number of nodes for input layer dims[1] for the
         #first hidden layer and so forth, dims[-1] gives the number of nodes in the output layer
 
-        self.act_hidden = activation_func_h #list of activation functions for hidden layers, 
+        self.activation_funcs = activation_funcs #list of activation functions for hidden layers, 
+        self.activation_ders = activation_ders
         #NOTE: currently has no default, needs to add default 
-        # construction as list length: len(dims)-2 of activation_functions.sigmoid
-
-        self.func_out = output_func #callable, activation function for output layer
+        # construction as list length: len(dims)-1 of activation_functions.sigmoid
 
         self.cost_func = cost_func #callable, cost function method
+        self.cost_der = cost_der #callable, derivative of the cost function
         self.seed = seed #seed for np.random
         
         self.weights = list() #list of arrays where (Weights,bias) for each layer
@@ -41,6 +44,7 @@ class NN:
         self.classification = None
 
         self.reset_weights()
+        
        
         #elf.setup_activation_functions() #add functionality to generate default case
         #where the activation funcs are the same, not having pass only
@@ -68,9 +72,53 @@ class NN:
         val_errors = np.empty(epochs)
         val_errors.fill(np.nan)
 
-        train_accs = np.em
+        train_accs = np.empty(epochs)
+        train_accs.fill(np.nan)
+        val_accs = np.empty(epochs)
+        val_accs.fill(np.nan)
 
-    def predict(self):
+        batch_size = X.shape[0] // batches
+
+        X, t = resample(X,t) #split train test?
+
+        cost_function_train = self.cost_func(t)
+        if val_set:
+            cost_function_val = self.cost_func(t_val)
+
+        for i in range(len(self.weights)):
+            self.schedulers_weight.append(copy(scheduler))
+            self.schedulers_bias.append(copy(scheduler))
+
+        print(f"Using scheduler: {scheduler.__class__.__name__} with Eta={scheduler.eta}")
+
+        try: 
+            for e in range(epochs):
+                for i in range(batches):
+                    if i == batches -1:
+                        #if we are on the last batch, take everything that is left
+                        X_batch = X[i*batch_size : ,:]
+                        t_batch = t[i*batch_size : ,:]
+                    else:
+                        #regular case, use same batch size
+                        X_batch = X[i*batch_size : (i+1) * batch_size, :]
+                        t_batch = t[i*batch_size : (i+1) * batch_size, :]
+                    self._feedforward(X_batch)
+                    self._backpropagation(X_batch,t_batch)
+                
+                for scheduler in self.schedulers_weight:
+                    scheduler.reset()
+
+                for scheduler in self.schedulers_bias:
+                    scheduler.reset()
+                
+                pred_train = self.predict(X)
+                training_error = cost_function_train(pred_train)
+
+
+        except KeyboardInterrupt:
+            pass #allows for stopping at any point to see progress
+
+    def predict(self,X):
         pass
 
     def reset_weights(self):
@@ -114,10 +162,11 @@ class NN:
         self.z_matrices = list()
     
         a = X
-        self.a_matrices.append(a)
-        self.z_matrices.append(a)
 
-        for (W, b), activation_func in zip(self.weights, self.act_hidden):
+        #self.a_matrices.append(a)
+        #self.z_matrices.append(a)
+
+        for (W, b), activation_func in zip(self.weights, self.activation_funcs):
             # Normalize b to row-broadcastable shape in case it's (out_dim,1)
             if b.ndim == 2:
                 if b.shape[1] == 1: 
@@ -137,22 +186,21 @@ class NN:
         return a
     
   
-    def backpropagation_batch(self,inputs, predictions , targets, activation_ders, cost_der = cost_functions.mse_derivative):
+    def _backpropagation(self, inputs, targets):
         # Use the existing feed_forward_batch to get intermediate values
 
         # Add the original inputs to the beginning of layer_inputs
         layer_inputs = [inputs] + self.a_matrices
 
         layer_grads = [None] * len(self.weights)
-        #dC_da = cost_der(predictions, targets)
 
         # We loop over the layers, from the last to the first
         for i in reversed(range(len(self.weights))):
-            layer_input, z, activation_der = layer_inputs[i], self.z_matrices[i], activation_ders[i]
+            layer_input, z, activation_der = layer_inputs[i], self.z_matrices[i], self.activation_ders[i]
 
             if i == len(self.weights) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                dC_da = cost_der(predictions, targets)  
+                dC_da = self.cost_der(self.a_matrices, targets)  
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W, b) = self.weights[i + 1]
