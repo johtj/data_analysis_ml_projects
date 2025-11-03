@@ -79,7 +79,7 @@ class NN:
 
         batch_size = X.shape[0] // batches
 
-        X, t = resample(X,t) #split train test?
+        X, t = resample(X,t) 
 
         cost_function_train = self.cost_func(t)
         if val_set:
@@ -114,12 +114,47 @@ class NN:
                 pred_train = self.predict(X)
                 training_error = cost_function_train(pred_train)
 
+                train_errors[e] = training_error
+
+                #validation
+                if val_set:
+                    pred_val = self.predict(X_val)
+                    validation_error = cost_function_val(pred_val)
+                    val_errors[e] = validation_error
+                
+                if self.classification:
+                    train_accuracy = self._accuracy(self.predict(X),t)
+                    train_accs[e] = train_accuracy
+                    if val_set:
+                        validation_accuracy = self._accuracy(pred_val,t_val)
+                        val_accs[e] = validation_accuracy
 
         except KeyboardInterrupt:
             pass #allows for stopping at any point to see progress
+        
+        scores = dict()
 
-    def predict(self,X):
-        pass
+        scores["training_errors"] = train_errors
+
+        if val_set: 
+            scores["validation_errors"] = val_errors
+        
+        if self.classification:
+            scores["training_accuracies"] = train_accs
+
+            if val_set:
+                scores["validation_accuracies"] = val_accs
+
+        return scores
+
+    def predict(self,X: np.ndarray, *, threshold=0.5):
+
+        predict = self._feedforward(X)
+
+        if self.classification:
+            return np.where(predict > threshold, 1, 0)
+        else:
+            return predict
 
     def reset_weights(self):
         """
@@ -216,3 +251,21 @@ class NN:
 
             return layer_grads
             
+    def _accuracy(self, prediction: np.ndarray, target: np.ndarray):
+        """
+        Description:
+        ------------
+            Calculates accuracy of given prediction to target
+
+        Parameters:
+        ------------
+            I   prediction (np.ndarray): vector of predicitons output network
+                (1s and 0s in case of classification, and real numbers in case of regression)
+            II  target (np.ndarray): vector of true values (What the network ideally should predict)
+
+        Returns:
+        ------------
+            A floating point number representing the percentage of correctly classified instances.
+        """
+        assert prediction.size == target.size
+        return np.average((target == prediction))
