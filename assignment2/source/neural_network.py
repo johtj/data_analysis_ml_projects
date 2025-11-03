@@ -159,32 +159,35 @@ class NN:
     def reset_weights(self):
         """
         Initializes the weights and biases for a feed forward neural network
-        of given dimensions where each layer has an array of 
+        of given dimensions where each layer has an array of
         dims (layer nodes, next layer nodes)
         """
-
+ 
         if self.seed is not None:
             np.random.seed(self.seed)
-
+ 
         self.weights = list()
         """
-        generates weights that are output + 1 x input where first row of 
+        generates weights that are output + 1 x input where first row of
         weights = biases
         for i in range(len(self.dims)-1):
             weight_array = np.random.randn(self.dims[i]+1,self.dims[i+1])
             weight_array[0,:] = np.random.randn(self.dims[i+1]) * 0.01
-
+ 
             self.weights.append(weight_array)
         """
-
+ 
         """ Generates list, weights, of tuples (Weight, bias) where
         weight is output n x input m
         """
-        for i in range(len(self.dims)-1):
-            W = np.random.randn(self.dims[i],self.dims[i+1])
-            b = np.random.randn(self.dims[i+1])
-            self.weights.append((W, b))
-
+        output_size = self.dims[-1]
+        i_size = self.dims[0]  # number of features input data
+        print(self.dims[1:])
+        for layer_output_size in self.dims[1:]: # step through sizes of hidden and output layer
+            W = np.random.randn(i_size, layer_output_size)
+            b = np.random.randn(layer_output_size)
+            self.weights.append((W, b))  
+            i_size = layer_output_size   # ensure next step in hidden and output layer
 
 
 
@@ -235,22 +238,22 @@ class NN:
 
             if i == len(self.weights) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                dC_da = self.cost_der(self.a_matrices, targets)  
+                dC_da = self.cost_der(self.a_matrices[-1], targets)  
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W, b) = self.weights[i + 1]
                 dC_da = dC_dz @ W.T 
 
-            dC_dz = dC_da * activation_der(z)
+            dC_dz = dC_da * self.activation_ders[i](X=z)
             dC_dW = layer_input.T @ dC_dz
-            #dC_dW = np.outer(dC_dz, layer_input)
-            #dC_db = dC_dz
+
             dC_db = np.sum(dC_dz, axis=0) 
 
             layer_grads[i] = (dC_dW, dC_db)
 
             return layer_grads
-            
+   
+ 
     def _accuracy(self, prediction: np.ndarray, target: np.ndarray):
         """
         Description:
