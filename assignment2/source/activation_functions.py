@@ -50,3 +50,10 @@ class linear(activation_function):
 
     def linear_derivative(self,X):
         return np.ones_like(X)
+    
+class softmax(activation_function):
+    @staticmethod
+    def softmax(Z):
+        Z_shift = Z - np.max(Z) 
+        expZ = np.exp(Z_shift)
+        return expZ / np.sum(expZ)
