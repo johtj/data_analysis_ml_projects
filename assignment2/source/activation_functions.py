@@ -15,12 +15,13 @@ class activation_function:
 
 class sigmoid(activation_function):
 
-    def sigmoid(self,X):
+    def sigmoid_func(self,X):
         # ref 1
         return 1 / (1 + np.exp(-X))
 
     def sigmoid_derivative(self,X):
-        s = self.sigmoid(X)
+        s = sigmoid.sigmoid_func(self, X)
+        #s = self.sigmoid(X)
         return s * (1 - s)
 
 class RELU(activation_function):

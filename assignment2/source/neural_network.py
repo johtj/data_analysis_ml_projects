@@ -1,8 +1,10 @@
 import autograd.numpy as np
-from source.activation_functions import activation_functions
-from source.cost_functions import cost_functions
+from activation_functions import activation_function
+from cost_functions import cost_function
+from cost_functions import mse
+from cost_functions import cross_entropy
 from typing import Callable
-import source.schedulers as scheduler_methods
+import schedulers as scheduler_methods
 from sklearn.utils import resample
 from copy import copy
 
@@ -16,8 +18,7 @@ class NN:
     def __init__(self,dims: list[int],
                  activation_funcs: list[Callable],
                  activation_ders: list[Callable],
-                 cost_func: Callable = cost_functions.mse,
-                 cost_der: Callable = cost_functions.mse_derivative,
+                 cost: cost_function = mse(),
                  seed: int = None): #if this one throws an error, switch to default val -99999 or something
         
         
@@ -30,8 +31,8 @@ class NN:
         #NOTE: currently has no default, needs to add default 
         # construction as list length: len(dims)-1 of activation_functions.sigmoid
 
-        self.cost_func = cost_func #callable, cost function method
-        self.cost_der = cost_der #callable, derivative of the cost function
+        self.cost_func = cost.cost #callable, cost function method
+        self.cost_der = cost.cost_derivative #callable, derivative of the cost function
         self.seed = seed #seed for np.random
         
         self.weights = list() #list of arrays where (Weights,bias) for each layer
@@ -182,7 +183,7 @@ class NN:
         """
         output_size = self.dims[-1]
         i_size = self.dims[0]  # number of features input data
-        print(self.dims[1:])
+        #print(self.dims[1:])
         for layer_output_size in self.dims[1:]: # step through sizes of hidden and output layer
             W = np.random.randn(i_size, layer_output_size)
             b = np.random.randn(layer_output_size)
@@ -205,19 +206,24 @@ class NN:
         #self.z_matrices.append(a)
 
         for (W, b), activation_func in zip(self.weights, self.activation_funcs):
-            # Normalize b to row-broadcastable shape in case it's (out_dim,1)
             if b.ndim == 2:
-                if b.shape[1] == 1: 
-                    b = b.ravel()         
+                if b.shape[1] == 1:
+                    b = b.ravel()
                 elif b.shape[0] == 1:
-                    b = b.reshape(-1)      
+                    b = b.reshape(-1)
                 else:
-                    raise ValueError(f"Bias has unexpected shape {b.shape}")
+                    raise ValueError(f"Bias b has unexpected shape {b.shape}")
+            elif b.ndim != 1:
+                raise ValueError(f"Bias b must be 1D or 2D, got shape {b.shape}")
+
+            # Check matrix multiplication compatibility
+            if a.shape[1] != W.shape[0]:
+                raise ValueError(f"Incompatible shapes for matrix multiplication: {a.shape} @ {W.shape}")
                 
             z = a @ W + b    
             self.z_matrices.append(z)
 
-            a = activation_func(z)
+            a = activation_func(self, X=z)
             self.a_matrices.append(a)
 
 
@@ -244,14 +250,14 @@ class NN:
                 (W, b) = self.weights[i + 1]
                 dC_da = dC_dz @ W.T 
 
-            dC_dz = dC_da * self.activation_ders[i](X=z)
+            dC_dz = dC_da * self.activation_ders[i](self, X=z)
             dC_dW = layer_input.T @ dC_dz
 
             dC_db = np.sum(dC_dz, axis=0) 
 
             layer_grads[i] = (dC_dW, dC_db)
 
-            return layer_grads
+        return layer_grads
    
  
     def _accuracy(self, prediction: np.ndarray, target: np.ndarray):
