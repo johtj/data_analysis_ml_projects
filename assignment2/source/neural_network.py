@@ -251,11 +251,23 @@ class NN:
                 dC_da = dC_dz @ W.T 
 
             dC_dz = dC_da * self.activation_ders[i](self, X=z)
-            dC_dW = layer_input.T @ dC_dz
 
-            dC_db = np.sum(dC_dz, axis=0) 
+            #calculate gradients
+            gradient_weights = layer_input.T @ dC_dz
+            gradient_bias = np.sum(dC_dz, axis=0) 
 
-            layer_grads[i] = (dC_dW, dC_db)
+            layer_grads[i] = (gradient_weights, gradient_bias)
+
+            weight_array = self.weights[i][0]
+            bias_array = self.weights[i][1]
+
+            updates_weights = self.schedulers_weight[i].calculate_update(gradient_weights)
+            updates_biases = self.schedulers_bias[i].calculate_update(gradient_bias)
+
+            weight_array -= updates_weights
+            bias_array -= updates_biases
+
+            self.weights[i] = (weight_array,bias_array)
 
         return layer_grads
    
