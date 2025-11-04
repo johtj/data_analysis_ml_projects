@@ -290,3 +290,98 @@ class NN:
         """
         assert prediction.size == target.size
         return np.average((target == prediction))
+
+
+    def autograd_gradients(self, X, targets):
+        """
+        Docstring created with Copilot
+
+        Computes gradients of the mean squared error (MSE) loss with respect to the network's weights and biases
+        using Autograd's automatic differentiation.
+
+        Parameters
+        ----------
+        X : ndarray
+            Input data of shape (n_samples, n_features).
+        targets : ndarray
+            Target output values of shape (n_samples, n_outputs).
+
+        Returns
+        -------
+        list of tuples
+            A list containing tuples of gradients (dW, db) for each layer, where:
+            - dW is the gradient of the loss with respect to the weight matrix W
+            - db is the gradient of the loss with respect to the bias vector b
+
+        Notes
+        -----
+        This method assumes that `self.weights` is a list of (W, b) tuples where W and b are 
+        autograd-compatible arrays. It also assumes that `self.activation_funcs` is a list of 
+        activation functions that accept keyword argument `X` for input.
+        """
+
+        from autograd import grad
+
+        def forward(weighs_bias, X_):
+            a = X_
+            for (W, b), act in zip(weighs_bias, self.activation_funcs):
+                z = a @ W + b 
+                a = act(self, X=z)            
+            return a
+
+        def mse_loss(weighs_bias, X_, y_):
+            y_pred = forward(weighs_bias, X_)
+            return np.mean((y_pred - y_) ** 2) 
+
+        weighs_bias = tuple((W, b) for (W, b) in self.weights)
+
+        loss_grad = grad(mse_loss)
+        grads = loss_grad(weighs_bias, X, targets)  
+
+        return [(gW, gb) for (gW, gb) in grads]
+    
+    def compare_gradients(self, X, targets, atol=1e-6):  
+        """
+        Compares gradients computed by the model's manual backpropagation method with those
+        computed using Autograd's automatic differentiation.
+
+        Parameters
+        ----------
+        X : ndarray
+            Input data of shape (n_samples, n_features).
+        targets : ndarray
+            Target output values of shape (n_samples, n_outputs).
+        atol : float, optional
+            Absolute tolerance used in `np.allclose` to determine if gradients match. Default is 1e-6.
+
+        Returns
+        -------
+        None
+            Prints a comparison of whether the gradients match for each layer, and the actual
+            differences between the manually computed and Autograd-computed gradients.
+
+        Notes
+        -----
+        This method is useful for debugging and validating the correctness of the manual 
+        backpropagation implementation. It assumes that `self._feedforward` prepares the 
+        necessary intermediate values for backpropagation, and that `self.autograd_gradients` 
+        returns gradients in the same format as `self._backpropagation`.
+        """
+        
+        self._feedforward(X)
+        own_gradients = self._backpropagation(X, targets)
+
+        autograd_gradients = self.autograd_gradients(X, targets)
+
+        print()
+        print('Compare gradients between own and autograd calculations:')
+        for i, ((dW_manual, db_manual), (dW_auto, db_auto)) in enumerate(zip(own_gradients, autograd_gradients)):
+            w_close = np.allclose(dW_manual, dW_auto, atol=atol)
+            b_close = np.allclose(db_manual, db_auto, atol=atol)
+            print(f"Layer {i}: dW match: {w_close}, db match: {b_close}")
+
+        print()
+        print('Differences between own and autograd gradients')
+        for i, ((dW_manual, db_manual), (dW_auto, db_auto)) in enumerate(zip(own_gradients, autograd_gradients)):
+            print(f"Layer {i} - dW diff:\n{dW_manual - dW_auto}")
+            print(f"Layer {i} - db diff:\n{db_manual - db_auto}")
