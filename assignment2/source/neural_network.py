@@ -223,7 +223,8 @@ class NN:
             z = a @ W + b    
             self.z_matrices.append(z)
 
-            a = activation_func(self, X=z)
+            #a = activation_func(self, X=z)
+            a = activation_func(z)
             self.a_matrices.append(a)
 
 
@@ -250,7 +251,8 @@ class NN:
                 (W, b) = self.weights[i + 1]
                 dC_da = dC_dz @ W.T 
 
-            dC_dz = dC_da * self.activation_ders[i](self, X=z)
+            #dC_dz = dC_da * self.activation_ders[i](self, X=z)
+            dC_dz = dC_da * activation_der(z)
 
             #calculate gradients
             gradient_weights = layer_input.T @ dC_dz
@@ -322,21 +324,22 @@ class NN:
 
         from autograd import grad
 
-        def forward(weighs_bias, X_):
+        def forward(weights_bias, X_):
             a = X_
-            for (W, b), act in zip(weighs_bias, self.activation_funcs):
+            for (W, b), act in zip(weights_bias, self.activation_funcs):
                 z = a @ W + b 
-                a = act(self, X=z)            
+                #a = act(self, X=z)            
+                a = act(z)    
             return a
 
-        def mse_loss(weighs_bias, X_, y_):
-            y_pred = forward(weighs_bias, X_)
+        def mse_loss(weights_bias, X_, y_):
+            y_pred = forward(weights_bias, X_)
             return np.mean((y_pred - y_) ** 2) 
 
-        weighs_bias = tuple((W, b) for (W, b) in self.weights)
+        weights_bias = tuple((W, b) for (W, b) in self.weights)
 
         loss_grad = grad(mse_loss)
-        grads = loss_grad(weighs_bias, X, targets)  
+        grads = loss_grad(weights_bias, X, targets)  
 
         return [(gW, gb) for (gW, gb) in grads]
     
