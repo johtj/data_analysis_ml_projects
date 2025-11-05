@@ -36,7 +36,13 @@ def plot_heatmap(dataset, heat_metric, title='remember title',
     # Pivot data for heatmap
     heatmap_data = dataset.pivot_table(index=heat_index, columns=heat_column, values=heat_metric)
 
-    fig, ax = plt.subplots(figsize=(6, 4))  
+
+
+    rows, cols = heatmap_data.shape
+    fig_width = max(4, cols * 1.2)  
+    fig_height = max(3, rows * 0.5)  
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))  
     if y_axis_scientific:
         def sci_label(v):
             return np.format_float_scientific(v, precision=scientific_precision, unique=False)
