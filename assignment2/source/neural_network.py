@@ -82,15 +82,15 @@ class NN:
 
         X, t = resample(X,t) 
 
-        cost_function_train = self.cost_func(t)
+        cost_function_train = self.cost_func#(t)
         if val_set:
-            cost_function_val = self.cost_func(t_val)
+            cost_function_val = self.cost_func#(t_val)
 
         for i in range(len(self.weights)):
             self.schedulers_weight.append(copy(scheduler))
             self.schedulers_bias.append(copy(scheduler))
 
-        print(f"Using scheduler: {scheduler.__class__.__name__} with Eta={scheduler.eta}")
+        print(f"Using scheduler: {scheduler.__class__.__name__} with Eta={scheduler.eta}")  #LIST of schedulers, added [0] just to run code
 
         try: 
             for e in range(epochs):
@@ -113,14 +113,15 @@ class NN:
                     scheduler.reset()
                 
                 pred_train = self.predict(X)
-                training_error = cost_function_train(pred_train)
+                training_error = cost_function_train(t, pred_train) #training_error = cost_function_train(pred_train) - missing target values
+                
 
                 train_errors[e] = training_error
 
                 #validation
                 if val_set:
                     pred_val = self.predict(X_val)
-                    validation_error = cost_function_val(pred_val)
+                    validation_error = cost_function_val(t_val, pred_val) #validation_error = cost_function_val(pred_val) - missing target values
                     val_errors[e] = validation_error
                 
                 if self.classification:
@@ -146,7 +147,8 @@ class NN:
             if val_set:
                 scores["validation_accuracies"] = val_accs
 
-        return scores
+        if val_set: return scores, pred_val
+        else: return scores
 
     def predict(self,X: np.ndarray, *, threshold=0.5):
 
@@ -294,6 +296,42 @@ class NN:
         return np.average((target == prediction))
 
 
+    def _backpropagation_for_gradient_check(self, inputs, targets):
+        """
+        Removed update of gradients from _backpropagation. 
+        Gradient comparison is done on first backpropagation step.
+        """
+        # Use the existing feed_forward_batch to get intermediate values
+
+        # Add the original inputs to the beginning of layer_inputs
+        layer_inputs = [inputs] + self.a_matrices
+
+        layer_grads = [None] * len(self.weights)
+
+        # We loop over the layers, from the last to the first
+        for i in reversed(range(len(self.weights))):
+            layer_input, z, activation_der = layer_inputs[i], self.z_matrices[i], self.activation_ders[i]
+
+            if i == len(self.weights) - 1:
+                # For last layer we use cost derivative as dC_da(L) can be computed directly
+                dC_da = self.cost_der(self.a_matrices[-1], targets)  
+            else:
+                # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
+                (W, b) = self.weights[i + 1]
+                dC_da = dC_dz @ W.T 
+
+            #dC_dz = dC_da * self.activation_ders[i](self, X=z)
+            dC_dz = dC_da * activation_der(z)
+
+            #calculate gradients
+            gradient_weights = layer_input.T @ dC_dz
+            gradient_bias = np.sum(dC_dz, axis=0) 
+
+            layer_grads[i] = (gradient_weights, gradient_bias)
+
+        return layer_grads
+   
+
     def autograd_gradients(self, X, targets):
         """
         Docstring created with Copilot
@@ -372,8 +410,8 @@ class NN:
         """
         
         self._feedforward(X)
-        own_gradients = self._backpropagation(X, targets)
-
+        own_gradients = self._backpropagation_for_gradient_check(X, targets)
+        
         autograd_gradients = self.autograd_gradients(X, targets)
 
         print()
