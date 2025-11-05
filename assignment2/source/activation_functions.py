@@ -1,59 +1,50 @@
-import autograd.numpy as np
+# ACTIVATION FUNCTIONS
 
-class activation_function:
-    # should be overwritten
-    def activation_function(self, y_true,y_pred):
-        raise NotImplementedError
+import autograd.numpy as np 
 
-    def activation_derivative(self,y_pred,y_true):
-        raise NotImplementedError
+
+def sigmoid(Z): # binary classification
+    # ref 1
+    return 1 / (1 + np.exp(-Z))
+
+def sigmoid_derivative(Z):
+    s = sigmoid(Z)
+    return s * (1 - s)
+
+
+def RELU(Z):
+    return np.where(Z > 0, Z, 0)
+
     
-    # overwritten if needed
-    def reset(self):
-        pass
+
+def RELU_derivative(Z):
+    return np.where(Z > 0, 1, 0)
 
 
-class sigmoid(activation_function):
 
-    def sigmoid_func(self,X):
-        # ref 1
-        return 1 / (1 + np.exp(-X))
 
-    def sigmoid_derivative(self,X):
-        s = sigmoid.sigmoid_func(self, X)
-        #s = self.sigmoid(X)
-        return s * (1 - s)
+def LRELU(Z, delta = 10e-4):
+    # ref 1
+    return np.where(Z > np.zeros(Z.shape), Z, delta * Z)
 
-class RELU(activation_function):
+def LRELU_derivative(Z, delta = 10e-4):
+    return np.where(Z > np.zeros(Z.shape), 1, delta)
 
-    def RELU(self,X):
-        # ref 1
-        #return np.where(X > np.zeros(X.shape), X, np.zeros(X.shape))
-        return np.where(X > 0, X, 0)
 
-    def RELU_derivative(self,X):
-        #return (X > np.zeros(X.shape) > 0).astype(float)
-        return np.where(X > 0, 1, 0)
 
-class LRELU(activation_function):
-    def LRELU(self,X, delta = 10e-4):
-        # ref 1
-        return np.where(X > np.zeros(X.shape), X, delta * X)
 
-    def LRELU_derivative(self,X, delta = 10e-4):
-        return np.where(X > np.zeros(X.shape), 1, delta)
+def linear(Z):
+    return Z
 
-class linear(activation_function):
+def linear_derivative(Z):
+    return np.ones_like(Z)
 
-    def linear(self,X):
-        return X
 
-    def linear_derivative(self,X):
-        return np.ones_like(X)
-    
-class softmax(activation_function):
-    @staticmethod
-    def softmax(Z):
-        Z_shift = Z - np.max(Z) 
-        expZ = np.exp(Z_shift)
-        return expZ / np.sum(expZ)
+
+def softmax(Z):
+    Z_shift = Z - np.max(Z) 
+    expZ = np.exp(Z_shift)
+    return expZ / np.sum(expZ)
+
+
+
