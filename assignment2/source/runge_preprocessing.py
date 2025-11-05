@@ -23,6 +23,8 @@ NP_RANDOM_SEED = 250 # ensure reproducibility numpy
 ETA_VALUES = [0.1, 0.01, 0.001, 0.0001]
 LAMBDA_VALUES = np.logspace(-2, -4, 10)
 
+MOMENTUM = 0.9
+
 VERBOSE = False
 
 RUNGE_HIDDEN_LAYERS = (50, 100)
@@ -102,6 +104,7 @@ x_train_scaled, x_test_scaled, x_train_mean, x_train_std = standard_scaler(x_tra
 # Reshape for use in neural network code (batch)
 x_train_scaled = np.array(x_train_scaled).reshape(-1,1)     
 x_test_scaled = np.array(x_test_scaled).reshape(-1,1)
+x_test = np.array(x_test).reshape(-1,1)
 y_train = np.array(y_train).reshape(-1, 1)
 y_test = np.array(y_test).reshape(-1, 1)
 
