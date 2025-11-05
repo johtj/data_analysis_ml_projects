@@ -67,7 +67,7 @@ class ADAM(scheduler):
         delta = 1e-8
 
         self.moment = self.rho * self.moment + (1-self.rho) * gradients
-        self.second = self.rho2 * self.second + (1-self.rho2) * gradients
+        self.second = self.rho2 * self.second + (1 - self.rho2) * gradients * gradients
 
         moment_debiased = self.moment / (1-self.rho**self.time_step)
         second_debiased = self.second / (1-self.rho2**self.time_step)
