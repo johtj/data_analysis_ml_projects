@@ -6,8 +6,8 @@ import autograd.numpy as np
 from sklearn.model_selection import train_test_split
 
 # custom imports
-from scaling import standard_scaler
-import activation_functions
+from source.scaling import standard_scaler
+import source.activation_functions as activations_functions
 
 ## --- Settings --- 
 # Constants
@@ -27,13 +27,13 @@ MOMENTUM = 0.9
 
 VERBOSE = False
 
-RUNGE_HIDDEN_LAYERS = (50, 100)
+RUNGE_HIDDEN_S = (50, 100)
 RUNGE_MAX_ITERATIONS = 10
 
-ACTIVATION_FUNCTION_HIDDEN = activation_functions.sigmoid().sigmoid_func
-ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE = activation_functions.sigmoid().sigmoid_derivative
-ACTIVATION_FUNCTION_OUTPUT = activation_functions.linear().linear
-ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE = activation_functions.linear().linear_derivative
+ACTIVATION_FUNCTION_HIDDEN = activations_functions.sigmoid
+ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE = activations_functions.sigmoid_derivative
+ACTIVATION_FUNCTION_OUTPUT = activations_functions.linear
+ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE = activations_functions.linear_derivative
 
     
 
@@ -43,48 +43,48 @@ def runge_function(x, n_datapoints=DATAPOINTS, standard_deviation=STANDARD_DEVIA
     return y
 
 
-def create_activations_layderdim(activation_hidden, activation_hidden_derivative, activation_output, activation_output_derivative, hidden_layers, target, input):
+def create_activations_layderdim(activation_hidden, activation_hidden_derivative, activation_output, activation_output_derivative, hidden_s, target, input):
     """
         Docstring craeted with Copilot
         
-        Constructs activation functions and layer dimensions for a feedforward neural network.
+        Constructs activation functions and  dimensions for a feedforward neural network.
 
         Parameters:
         ----------
         activation_hidden : callable
-            Activation function to be used for hidden layers.
+            Activation function to be used for hidden s.
         activation_hidden_derivative : callable
-            Derivative of the activation function for hidden layers.
+            Derivative of the activation function for hidden s.
         activation_output : callable
-            Activation function to be used for the output layer.
+            Activation function to be used for the output .
         activation_output_derivative : callable
-            Derivative of the activation function for the output layer.
-        hidden_layers : list of int
-            List specifying the number of neurons in each hidden layer.
+            Derivative of the activation function for the output .
+        hidden_s : list of int
+            List specifying the number of neurons in each hidden .
         target : np.ndarray
-            Target output data. Used to determine the output layer size.
+            Target output data. Used to determine the output  size.
         input : np.ndarray
-            Input data. Used to determine the input layer size.
+            Input data. Used to determine the input  size.
 
         Returns:
         -------
         activation_functions : list of callables
-            List of activation functions for each layer.
+            List of activation functions for each .
         activation_functions_derivative : list of callables
-            List of activation function derivatives for each layer.
-        layer_output_sizes : list of int
-            List of output sizes for each layer, including input and output layers.
+            List of activation function derivatives for each .
+        _output_sizes : list of int
+            List of output sizes for each , including input and output s.
         """
 
     input_dim = input.shape[1]
     output_dim = 1 if target.ndim == 1 else target.shape[1] 
-    layer_output_sizes = [input_dim, *hidden_layers, output_dim]
+    _output_sizes = [input_dim, *hidden_s, output_dim]
 
-    num_layers = len(layer_output_sizes)
-    activation_functions = [activation_hidden] * (num_layers - 1) + [activation_output] 
-    activation_functions_derivative = [activation_hidden_derivative] * (num_layers - 1) + [activation_output_derivative] 
+    num_s = len(_output_sizes)
+    activation_functions = [activation_hidden] * (num_s - 1) + [activation_output] 
+    activation_functions_derivative = [activation_hidden_derivative] * (num_s - 1) + [activation_output_derivative] 
 
-    return activation_functions, activation_functions_derivative, layer_output_sizes
+    return activation_functions, activation_functions_derivative, _output_sizes
 
 ## --- Preprocessing --- 
 # Generate data for Runge function
@@ -109,4 +109,4 @@ y_train = np.array(y_train).reshape(-1, 1)
 y_test = np.array(y_test).reshape(-1, 1)
 
 
-activations, activations_derivative, layer_dim = create_activations_layderdim(ACTIVATION_FUNCTION_HIDDEN, ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE, ACTIVATION_FUNCTION_OUTPUT, ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE, RUNGE_HIDDEN_LAYERS, y_train, x_train_scaled)
+activations, activations_derivative, _dim = create_activations_layderdim(ACTIVATION_FUNCTION_HIDDEN, ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE, ACTIVATION_FUNCTION_OUTPUT, ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE, RUNGE_HIDDEN_S, y_train, x_train_scaled)

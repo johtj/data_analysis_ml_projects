@@ -1,10 +1,11 @@
 import autograd.numpy as np
-from activation_functions import activation_function
-from cost_functions import cost_function
-from cost_functions import mse
-from cost_functions import cross_entropy
+import source.activation_functions as activation_functions
+#from activation_functions import activation_function
+from source.cost_functions import cost_function
+from source.cost_functions import mse
+from source.cost_functions import cross_entropy
 from typing import Callable
-import schedulers as scheduler_methods
+import source.schedulers as scheduler_methods
 from sklearn.utils import resample
 from copy import copy
 
