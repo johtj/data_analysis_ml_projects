@@ -20,15 +20,17 @@ TRAIN_SPLIT = 1 - TEST_SPLIT
 TEST_TRAIN_RANDOM_STATE = 42 # ensure reproducibility train_test_split
 NP_RANDOM_SEED = 250 # ensure reproducibility numpy
 
-ETA_VALUES = [0.1, 0.01, 0.001, 0.0001]
+ETA_VALUES = [0.5, 0.1, 0.01, 0.001, 0.0001]
 LAMBDA_VALUES = np.logspace(-2, -4, 10)
 
 MOMENTUM = 0.9
 
 VERBOSE = False
 
-RUNGE_HIDDEN_S = (50, 100)
-RUNGE_MAX_ITERATIONS = 10
+RUNGE_HIDDEN = (50, 100)  
+RUNGE_HIDDEN50 = (50,)
+
+RUNGE_MAX_ITERATIONS = 1000
 
 ACTIVATION_FUNCTION_HIDDEN = activations_functions.sigmoid
 ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE = activations_functions.sigmoid_derivative
@@ -43,7 +45,7 @@ def runge_function(x, n_datapoints=DATAPOINTS, standard_deviation=STANDARD_DEVIA
     return y
 
 
-def create_activations_layderdim(activation_hidden, activation_hidden_derivative, activation_output, activation_output_derivative, hidden_s, target, input):
+def create_activations_layderdim(activation_hidden, activation_hidden_derivative, activation_output, activation_output_derivative, hidden, target, input):
     """
         Docstring craeted with Copilot
         
@@ -59,7 +61,7 @@ def create_activations_layderdim(activation_hidden, activation_hidden_derivative
             Activation function to be used for the output .
         activation_output_derivative : callable
             Derivative of the activation function for the output .
-        hidden_s : list of int
+        hidden : list of int
             List specifying the number of neurons in each hidden .
         target : np.ndarray
             Target output data. Used to determine the output  size.
@@ -77,10 +79,16 @@ def create_activations_layderdim(activation_hidden, activation_hidden_derivative
         """
 
     input_dim = input.shape[1]
-    output_dim = 1 if target.ndim == 1 else target.shape[1] 
-    _output_sizes = [input_dim, *hidden_s, output_dim]
+    output_dim = 1 if target.ndim == 1 else target.shape[1]
+    if len(hidden) > 1:
+        _output_sizes = [input_dim, *hidden, output_dim]
+    elif len(hidden) == 1:
+        _output_sizes = [input_dim, hidden[0], output_dim]
+    else:
+        print('Invalid length hidden layers')
 
     num_s = len(_output_sizes)
+
     activation_functions = [activation_hidden] * (num_s - 1) + [activation_output] 
     activation_functions_derivative = [activation_hidden_derivative] * (num_s - 1) + [activation_output_derivative] 
 
@@ -109,4 +117,5 @@ y_train = np.array(y_train).reshape(-1, 1)
 y_test = np.array(y_test).reshape(-1, 1)
 
 
-activations, activations_derivative, _dim = create_activations_layderdim(ACTIVATION_FUNCTION_HIDDEN, ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE, ACTIVATION_FUNCTION_OUTPUT, ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE, RUNGE_HIDDEN_S, y_train, x_train_scaled)
+activations, activations_derivative, _dim = create_activations_layderdim(ACTIVATION_FUNCTION_HIDDEN, ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE, ACTIVATION_FUNCTION_OUTPUT, ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE, RUNGE_HIDDEN, y_train, x_train_scaled)
+activations_50, activations_derivative_50, _dim50 = create_activations_layderdim(ACTIVATION_FUNCTION_HIDDEN, ACTIVATION_FUNCTION_HIDDEN_DERIVATIVE, ACTIVATION_FUNCTION_OUTPUT, ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE, RUNGE_HIDDEN50, y_train, x_train_scaled)
