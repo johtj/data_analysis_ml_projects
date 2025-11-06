@@ -20,7 +20,7 @@ TRAIN_SPLIT = 1 - TEST_SPLIT
 TEST_TRAIN_RANDOM_STATE = 42 # ensure reproducibility train_test_split
 NP_RANDOM_SEED = 250 # ensure reproducibility numpy
 
-ETA_VALUES = [0.5, 0.1, 0.01, 0.001, 0.0001]
+ETA_VALUES = [0.1, 0.01, 0.001, 0.0001]
 LAMBDA_VALUES = np.logspace(-2, -4, 10)
 
 MOMENTUM = 0.9
