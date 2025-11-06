@@ -8,11 +8,60 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+def create_activations_layderdim(activation_hidden, activation_hidden_derivative, activation_output, activation_output_derivative, hidden, target, input):
+    """
+    Docstring craeted with Copilot
+    
+    Constructs activation functions and  dimensions for a feedforward neural network.
 
-# cost function
-mse_formula = mse().cost
+    Parameters:
+    ----------
+    activation_hidden : callable
+        Activation function to be used for hidden s.
+    activation_hidden_derivative : callable
+        Derivative of the activation function for hidden s.
+    activation_output : callable
+        Activation function to be used for the output .
+    activation_output_derivative : callable
+        Derivative of the activation function for the output .
+    hidden : list of int
+        List specifying the number of neurons in each hidden .
+    target : np.ndarray
+        Target output data. Used to determine the output  size.
+    input : np.ndarray
+        Input data. Used to determine the input  size.
 
-def neural_network_loop(model, cost_func, etas, lambdas, optimizer_name, max_iterations, x_train_scaled, y_train, x_test, y_test, momentum_val=0.9, verbose=True):#, seed=NP_RANDOM_SEED):
+    Returns:
+    -------
+    activation_functions : list of callables
+        List of activation functions for each .
+    activation_functions_derivative : list of callables
+        List of activation function derivatives for each .
+    _output_sizes : list of int
+        List of output sizes for each , including input and output s.
+    """
+
+    input_dim = input.shape[1]
+    output_dim = 1 if target.ndim == 1 else target.shape[1]
+    if len(hidden) > 1:
+        _output_sizes = [input_dim, *hidden, output_dim]
+    elif len(hidden) == 1:
+        _output_sizes = [input_dim, hidden[0], output_dim]
+    else:
+        print('Invalid length hidden layers')
+
+    num_s = len(_output_sizes)
+
+    #activation_functions = [activation_hidden] * (num_s - 1) + [activation_output]   # creates activation function for input layer
+    #activation_functions_derivative = [activation_hidden_derivative] * (num_s - 1) + [activation_output_derivative] 
+
+    activation_functions = [activation_hidden] * (num_s - 2) + [activation_output] 
+    activation_functions_derivative = [activation_hidden_derivative] * (num_s - 2) + [activation_output_derivative] 
+
+    return activation_functions, activation_functions_derivative, _output_sizes
+
+
+def neural_network_loop(model, etas, lambdas, optimizer_name, max_iterations, x_train_scaled, y_train, x_test, y_test, cost_func = mse.cost, momentum_val=0.9, verbose=True):
 
     results = []
 
@@ -25,7 +74,7 @@ def neural_network_loop(model, cost_func, etas, lambdas, optimizer_name, max_ite
             start_time = time.time()
 
             if optimizer_name == 'ADAM':
-                optimizer = schedulers.ADAM(eta, rho=lmbd, rho2=0)  
+                optimizer = schedulers.ADAM(eta, rho=0, rho2=0)  
             if optimizer_name == 'ADAM_L1':
                 optimizer = schedulers.ADAM(eta, rho=lmbd, rho2=0)  
             if optimizer_name == 'ADAM_L2':
@@ -33,7 +82,7 @@ def neural_network_loop(model, cost_func, etas, lambdas, optimizer_name, max_ite
             elif optimizer_name == 'SGD':
                 optimizer = schedulers.momentum(eta, momentum=momentum_val)
             elif optimizer_name == 'RMSprop':
-                optimizer = schedulers.RMSprop(eta=etas,rho=lmbd)
+                optimizer = schedulers.RMSprop(eta,rho=lmbd)
 
             epoch_scores, predictions = model.fit(X=x_train_scaled, 
                                                      t=y_train, 
@@ -42,7 +91,7 @@ def neural_network_loop(model, cost_func, etas, lambdas, optimizer_name, max_ite
                                                      epochs=max_iterations, 
                                                      scheduler=optimizer)
             
-            final_mse = mse_formula(y_true=y_test, y_pred=predictions)
+            final_mse = cost_func(y_true=y_test, y_pred=predictions)
             
             elapsed_time = time.time() - start_time
 
@@ -78,7 +127,7 @@ def pytorch_loop(model, cost_func, etas, lambdas, optimizer_name, max_iterations
             if optimizer_name == 'ADAM':
                 optimizer = optim.Adam(model.parameters(), lr=eta)
             if optimizer_name == 'ADAM_L1':
-                optimizer = optim.Adam(model.parameters(), lr=eta) # 
+                optimizer = optim.Adam(model.parameters(), lr=eta) # if: see below
             if optimizer_name == 'ADAM_L2':
                 optimizer = optim.Adam(model.parameters(), lr=eta, weight_decay = lmbd) # L2 via weight_decay in Pytorch
             elif optimizer_name == 'SGD':
