@@ -5,11 +5,18 @@ import source.schedulers as schedulers
 from source.cost_functions import mse
 import autograd.numpy as np 
 import source.activation_functions as activations_functions
-
+import source.OLS_functions as OLS_func
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
+
+
+def rescale_predictions(results, y_train_std, y_train_mean):
+    min_index = results['MSE test'].idxmin()
+    best_predictions = results.loc[min_index]['Predictions']
+    predictions_rescaled = OLS_func.rescale_y(best_predictions, y_train_std, y_train_mean)
+    return predictions_rescaled
 
 
 def decide_activation_func(ACTIVATION_FUNC):
