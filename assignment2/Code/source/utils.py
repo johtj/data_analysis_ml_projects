@@ -4,10 +4,31 @@ import pandas as pd
 import source.schedulers as schedulers
 from source.cost_functions import mse
 import autograd.numpy as np 
+import source.activation_functions as activations_functions
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+
+
+
+def decide_activation_func(ACTIVATION_FUNC):
+    ACTIVATION_FUNCTION_OUTPUT = activations_functions.linear
+    ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE = activations_functions.linear_derivative
+
+    if ACTIVATION_FUNC=='sigmoid':
+        ACTIVATION_FUNCTION = activations_functions.sigmoid
+        ACTIVATION_FUNCTION_DERIVATIVE = activations_functions.sigmoid_derivative
+    elif ACTIVATION_FUNC=='RELU':
+        ACTIVATION_FUNCTION = activations_functions.RELU
+        ACTIVATION_FUNCTION_DERIVATIVE = activations_functions.RELU_derivative
+    elif ACTIVATION_FUNC=='LRELU':
+        ACTIVATION_FUNCTION = activations_functions.LRELU
+        ACTIVATION_FUNCTION_DERIVATIVE = activations_functions.LRELU_derivative
+
+    return ACTIVATION_FUNCTION, ACTIVATION_FUNCTION_DERIVATIVE, ACTIVATION_FUNCTION_OUTPUT, ACTIVATION_FUNCTION_OUTPUT_DERIVATIVE
+
+
 
 
 def create_activations_layderdim(activation_hidden, activation_hidden_derivative, activation_output, activation_output_derivative, hidden, target, input):
@@ -63,118 +84,158 @@ def create_activations_layderdim(activation_hidden, activation_hidden_derivative
     return activation_functions, activation_functions_derivative, _output_sizes
 
 
-def neural_network_loop(model, etas, lambdas, optimizer_name, max_iterations, x_train_scaled, y_train, x_test, y_test, cost_func = mse.cost, momentum_val=0.9, verbose=False):
+def neural_network_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
+                        X_train_scaled, y_train_scaled, X_test_scaled, y_test_scaled, batch_val=None,
+                        rho=None, rho2=None, momentum=None, verbose=False):
+
+    def _check_missing_params(): # for own implementation lamda is passed into cost function
+        missing = []
+        if optimizer_name == 'ADAM':
+            if rho is None: missing.append("rho (beta1)")
+            if rho2 is None: missing.append("rho2 (beta2)")
+            if batch_val is None: missing.append("batch")
+        elif optimizer_name == 'RMSprop':
+            if rho is None: missing.append("rho1")
+            if batch_val is None: missing.append("batch")
+        elif optimizer_name == 'SGD':
+            if momentum is None: missing.append("momentum")
+            if batch_val is None: missing.append("batch")
+        return missing
+
+    missing = _check_missing_params()
+    if missing:
+        raise ValueError(f"Missing hyperparameters for {optimizer_name}: {', '.join(missing)}")
 
     results = []
 
     for eta in etas:
         for lmbd in lambdas:
-            
             if verbose:
-                print(f"\nTraining with: optimizer={optimizer_name}, lr={eta}, lambda={lmbd}, iteration={max_iterations}")
+                print(f"\nTraining with optimizer={optimizer_name}, lr={eta}, lambda={lmbd}, iterations={max_iterations}")
+
+            model = model_fn()
+            print(model)
+
+            # Create optimizer per (eta, lambda) pair
+            if optimizer_name == 'ADAM':
+                optimizer = schedulers.ADAM(eta, rho, rho2)
+            elif optimizer_name == 'SGD':
+                optimizer = schedulers.momentum(eta, momentum)
+            elif optimizer_name == 'RMSprop':
+                optimizer = schedulers.RMSprop(eta, rho)
 
             start_time = time.time()
-            
 
-            if optimizer_name == 'ADAM':
-                optimizer = schedulers.ADAM(eta, rho=0, rho2=0)  
-            elif optimizer_name == 'ADAM_L1':
-                optimizer = schedulers.ADAM(eta, rho=lmbd, rho2=0)  
-            elif optimizer_name == 'ADAM_L2':
-                optimizer = schedulers.ADAM(eta, rho=0, rho2=lmbd)   
-            elif optimizer_name == 'ADAM_L1_L2':
-                optimizer = schedulers.ADAM(eta, rho=lmbd, rho2=lmbd)
-            elif optimizer_name == 'SGD':
-                optimizer = schedulers.momentum(eta, momentum=momentum_val)
-            elif optimizer_name == 'RMSprop':
-                optimizer = schedulers.RMSprop(eta, rho=lmbd)
+            scores, predictions = model.fit(
+                X=X_train_scaled,
+                t=y_train_scaled,
+                X_val=X_test_scaled,
+                t_val=y_test_scaled,
+                epochs=max_iterations,
+                scheduler=optimizer,
+                batches=batch_val
+            )
 
-            epoch_scores, predictions = model.fit(X=x_train_scaled, 
-                                                     t=y_train, 
-                                                     X_val=x_test, 
-                                                     t_val=y_test, 
-                                                     epochs=max_iterations, 
-                                                     scheduler=optimizer)
-
-    
-            if np.any(np.isnan(predictions)) or np.all(predictions == 0):
-                print(f"Invalid predictions for eta={eta}, lambda={lmbd} — filling with dummy values.")
-                epoch_scores = {'training_errors': 1e6, 'validation_errors': 1e6}
-                predictions = np.full_like(y_test, fill_value=1e6)
-                final_mse = 1e6
-            else:
-                final_mse = cost_func(y_true=y_test, y_pred=predictions)
-
-
-            elapsed_time = time.time() - start_time
+            elapsed_time = round(time.time() - start_time, 2)
 
             results.append({
                 'Learning Rate': eta,
                 'Lambda': lmbd,
                 'Iterations': max_iterations,
-                'Elapsed Time (s)': round(elapsed_time, 2),
-                'Training Errors': epoch_scores['training_errors'],
-                'Validation Errors': epoch_scores['validation_errors'],
-                'MSE': final_mse,
+                'Elapsed Time (s)': elapsed_time,
+                'Training Errors': scores['training_errors'],
+                'Validation Errors': scores['validation_errors'],
+                'MSE train': scores['training_errors'][-1],
+                'MSE test': scores['validation_errors'][-1],
                 'Predictions': predictions
             })
+
     return pd.DataFrame(results)
 
 
-def pytorch_loop(model, etas, lambdas, optimizer_name, max_iterations, x_train_scaled, y_train, x_test_scaled, y_test, momentum_val=0.9, verbose=False, cost_func=nn.MSELoss()):
-    """
-    Copilot used to add L1 and L2 to ADAM optimizer
 
-    Input values as tensors
-    """
+def pytorch_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
+                 X_train_scaled, y_train_scaled, X_test_scaled, y_test_scaled,
+                 rho=None, rho2=None, weight_decay=None, momentum=None,
+                 batch_size=None, verbose=False):
+
+    def _check_missing_params():
+        missing = []
+        if optimizer_name == 'ADAM':
+            if rho is None: missing.append("rho (beta1)")
+            if rho2 is None: missing.append("rho2 (beta2)")
+            if weight_decay is None: missing.append("weight_decay/lambda")
+        elif optimizer_name == 'RMSprop':
+            if rho is None: missing.append("rho (decay)")
+            if momentum is None: missing.append("momentum")
+            if weight_decay is None: missing.append("weight_decay/lambda")
+
+        elif optimizer_name == 'SGD':
+            if momentum is None: missing.append("momentum")
+        if batch_size is None: missing.append("batch_size")
+        if weight_decay is None: missing.append("weight_decay/lambda")
+        return missing
+
+    missing = _check_missing_params()
+    if missing:
+        raise ValueError(f"Missing hyperparameters for {optimizer_name}: {', '.join(missing)}")
+
     results = []
+    train_ds = TensorDataset(X_train_scaled, y_train_scaled)
+    train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    loss_func = nn.MSELoss()
 
     for eta in etas:
         for lmbd in lambdas:
-            
             if verbose:
-                print(f"\nPytorch - Training with: optimizer={optimizer_name}, lr={eta}, lambda={lmbd}, iteration={max_iterations}")
+                print(f"\nTraining with optimizer={optimizer_name}, lr={eta}, lambda={lmbd}, iterations={max_iterations}")
+            
+            torch.manual_seed(1)
+            model = model_fn()
+
+            if optimizer_name == 'ADAM':
+                optimizer = torch.optim.Adam(model.parameters(), lr=eta, betas=(rho, rho2), weight_decay=lmbd)  # weight_decay more or less lambda
+            elif optimizer_name == 'SGD':
+                optimizer = torch.optim.SGD(model.parameters(), lr=eta, momentum=momentum, weight_decay=lmbd)
+            elif optimizer_name == 'RMSprop':
+                optimizer = torch.optim.RMSprop(model.parameters(), lr=eta, alpha=rho, momentum=momentum, weight_decay=lmbd)
+
 
             start_time = time.time()
 
-            if optimizer_name == 'ADAM':
-                optimizer = optim.Adam(model.parameters(), lr=eta)
-            elif optimizer_name == 'ADAM_L1':
-                optimizer = optim.Adam(model.parameters(), lr=eta) 
-            elif optimizer_name == 'ADAM_L2':
-                optimizer = optim.Adam(model.parameters(), lr=eta, weight_decay = lmbd) 
-            elif optimizer_name == 'SGD':
-                optimizer = optim.SGD(model.parameters(), lr=eta)
-            elif optimizer_name == 'RMSprop':
-                optimizer = optimizer = optim.RMSprop(model.parameters(), lr=eta)
-
             for epoch in range(max_iterations):
-                optimizer.zero_grad()
-                outputs = model(x_train_scaled)
-                loss = cost_func(outputs, y_train)
+                model.train()
+                total_loss = 0.0
+                for x_batch, y_batch in train_dl:
+                    y_batch = y_batch.squeeze()
+                    
+                    optimizer.zero_grad()
+                    pred = model(x_batch).squeeze()
+                    loss = loss_func(pred, y_batch)
+                    loss.backward()
+                    optimizer.step()
+                    total_loss += loss.item()
 
-                loss.backward()
-                optimizer.step()
+                if verbose and epoch % 20 == 0:
+                    avg_loss = total_loss / len(train_dl)
+                    print(f"Epoch {epoch}: Training Loss = {avg_loss:.4f}")
 
-                if verbose:
-                    if epoch % 100 == 0:
-                        print(f'Epoch {epoch}, Loss: {loss.item():.6f}')
-
-            # Predict
+            model.eval()
             with torch.no_grad():
-                predictions = model(x_test_scaled)
-            
-                mse_test = cost_func(predictions, y_test)
-            
-            elapsed_time = time.time() - start_time
+                test_pred = model(X_test_scaled).squeeze()
+                test_loss = loss_func(test_pred.squeeze(), y_test_scaled.squeeze()).item()
+                if verbose:
+                    print(f"Test MSE: {test_loss:.4f}")
+
+            elapsed_time = round(time.time() - start_time, 2)
 
             results.append({
                 'Learning Rate': eta,
                 'Lambda': lmbd,
                 'Iterations': max_iterations,
-                'Elapsed Time (s)': round(elapsed_time, 2),
-                'MSE': mse_test.item(),
-                'Predictions': predictions
+                'Elapsed Time (s)': elapsed_time,
+                'MSE test': test_loss,
+                'Predictions': test_pred
             })
 
     return pd.DataFrame(results)
