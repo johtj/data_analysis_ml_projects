@@ -224,6 +224,7 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
 
         # Sklearn Linear Regression without intercept for validation of code, test dataset only.
         # only for validation of own code        
+
         model = LinearRegression(fit_intercept=use_intercept)
         model.fit(X_train_sliced, y_train)
         y_pred_sklearn = model.predict(X_test_sliced)
