@@ -9,16 +9,18 @@ import source.OLS_functions as OLS_func
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-
+from source.runge_preprocessing import NP_RANDOM_SEED
 
 
 # model generation - ensure new model each iteration
 
-def pytorch_model_fn(hidden_units_list, input_data, pytorch_activation, verbose=False):
+def pytorch_model_mnist_fn(hidden_units_list, input_data, num_classes, pytorch_activation, image_data= False, verbose=False):
     """
     Docstring created with Copilot
 
-    Creates a feedforward neural network with specified hidden layers and sigmoid activations.
+    For MNIST classification
+
+    Creates a feedforward neural network with specified hidden layers and activations.
 
     Parameters:
         input_data (torch.Tensor or np.ndarray): Used to determine input feature size.
@@ -27,7 +29,42 @@ def pytorch_model_fn(hidden_units_list, input_data, pytorch_activation, verbose=
         nn.Sequential: A PyTorch model.
     """
     input_size = input_data.shape[1]
-    layers = []
+    if image_data:
+        layers = [nn.Flatten()]
+    else:
+        layers = []
+
+    for hidden_unit in hidden_units_list:
+        layers.append(nn.Linear(input_size, hidden_unit))
+        layers.append(pytorch_activation)  
+        input_size = hidden_unit
+
+    layers.append(nn.Linear(input_size, num_classes))  # Output layer
+
+    model = nn.Sequential(*layers)
+
+    if verbose: print(model)  # Optional: for inspection
+
+    return model
+
+
+def pytorch_model_fn(hidden_units_list, input_data, pytorch_activation, image_data= False, verbose=False):
+    """
+    Docstring created with Copilot
+
+    Creates a feedforward neural network with specified hidden layers and activations.
+
+    Parameters:
+        input_data (torch.Tensor or np.ndarray): Used to determine input feature size.
+
+    Returns:
+        nn.Sequential: A PyTorch model.
+    """
+    input_size = input_data.shape[1]
+    if image_data:
+        layers = [nn.Flatten()]
+    else:
+        layers = []
 
     for hidden_unit in hidden_units_list:
         layers.append(nn.Linear(input_size, hidden_unit))
@@ -115,9 +152,6 @@ def create_activations_layderdim(activation_hidden, activation_hidden_derivative
 
     num_s = len(_output_sizes)
 
-    #activation_functions = [activation_hidden] * (num_s - 1) + [activation_output]   # creates activation function for input layer
-    #activation_functions_derivative = [activation_hidden_derivative] * (num_s - 1) + [activation_output_derivative] 
-
     activation_functions = [activation_hidden] * (num_s - 2) + [activation_output] # no activation for input layer
     activation_functions_derivative = [activation_hidden_derivative] * (num_s - 2) + [activation_output_derivative] 
 
@@ -202,7 +236,7 @@ def neural_network_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
 
 
 def pytorch_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
-                 X_train_scaled, y_train_scaled, X_test_scaled, y_test_scaled,
+                 X_train_scaled, y_train_scaled, X_test_scaled, y_test_scaled, cost_func=None,
                  rho=None, rho2=None, weight_decay=None, momentum=None,
                  batch_size=None, verbose=False):
 
@@ -212,15 +246,17 @@ def pytorch_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
             if rho is None: missing.append("rho (beta1)")
             if rho2 is None: missing.append("rho2 (beta2)")
             if weight_decay is None: missing.append("weight_decay/lambda")
+            if cost_func is None: missing.append("cost function")
         elif optimizer_name == 'RMSprop':
             if rho is None: missing.append("rho (decay)")
             if momentum is None: missing.append("momentum")
             if weight_decay is None: missing.append("weight_decay/lambda")
-
+            if cost_func is None: missing.append("cost function")
         elif optimizer_name == 'SGD':
             if momentum is None: missing.append("momentum")
-        if batch_size is None: missing.append("batch_size")
-        if weight_decay is None: missing.append("weight_decay/lambda")
+            if batch_size is None: missing.append("batch_size")
+            if weight_decay is None: missing.append("weight_decay/lambda")
+            if cost_func is None: missing.append("cost function")
         return missing
 
     missing = _check_missing_params()
@@ -231,14 +267,19 @@ def pytorch_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
     train_ds = TensorDataset(X_train_scaled, y_train_scaled)
     train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
 
-    loss_func = nn.MSELoss()
+    if cost_func == 'MSE':
+        loss_func = nn.MSELoss()
+    elif cost_func == 'CrossEntropy':
+        loss_func = nn.CrossEntropyLoss()
+    
+    print(loss_func)
 
     for eta in etas:
         for lmbd in lambdas:
             if verbose:
                 print(f"\nTraining with optimizer={optimizer_name}, lr={eta}, lambda={lmbd}, iterations={max_iterations}")
             
-            torch.manual_seed(1)
+            torch.manual_seed(NP_RANDOM_SEED)
             model = model_fn()
 
             if optimizer_name == 'ADAM':
@@ -270,20 +311,40 @@ def pytorch_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
 
             model.eval()
             with torch.no_grad():
-                test_pred = model(X_test_scaled).squeeze()
+                test_pred = model(X_test_scaled)
+
+            elapsed_time = time.time() - start_time
+
+            if cost_func == 'MSE':
                 test_loss = loss_func(test_pred.squeeze(), y_test_scaled.squeeze()).item()
-                if verbose:
-                    print(f"Test MSE: {test_loss:.4f}")
+                result = {
+                    'Learning Rate': eta,
+                    'Lambda': lmbd,
+                    'Iterations': max_iterations,
+                    'Elapsed Time (s)': elapsed_time,
+                    'MSE test': test_loss,
+                    'Predictions': test_pred.cpu().numpy()
+                }
 
-            elapsed_time = round(time.time() - start_time, 2)
+            elif cost_func == 'CrossEntropy':
+                # Get predicted class labels
+                predicted_classes = torch.argmax(test_pred, dim=1)
+                true_classes = y_test_scaled.view(-1).long()  # Ensure correct shape and type
 
-            results.append({
-                'Learning Rate': eta,
-                'Lambda': lmbd,
-                'Iterations': max_iterations,
-                'Elapsed Time (s)': elapsed_time,
-                'MSE test': test_loss,
-                'Predictions': test_pred
-            })
+                # Compute accuracy
+                correct = (predicted_classes == true_classes).sum().item()
+                total = true_classes.size(0)
+                accuracy = correct / total
+
+                result = {
+                    'Learning Rate': eta,
+                    'Lambda': lmbd,
+                    'Iterations': max_iterations,
+                    'Elapsed Time (s)': elapsed_time,
+                    'Accuracy': accuracy,
+                    'Predictions': predicted_classes.cpu().numpy()
+                }
+
+            results.append(result)
 
     return pd.DataFrame(results)
