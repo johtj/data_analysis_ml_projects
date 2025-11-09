@@ -87,8 +87,8 @@ def plot_heatmap(dataset, heat_metric, title='remember title',
             cbar_kws={'label': heat_metric}
         )
 
-    ax.set_ylabel("$\\eta$")
-    ax.set_xlabel("$\\lambda$")
+    ax.set_ylabel("$\\lambda$")
+    ax.set_xlabel("$\\eta$")
     plt.title(title)
 
     ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
