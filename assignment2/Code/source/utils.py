@@ -93,7 +93,7 @@ def create_activations_layderdim(activation_hidden, activation_hidden_derivative
 
 def neural_network_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
                         X_train_scaled, y_train_scaled, X_test_scaled, y_test_scaled, batch_val=None,
-                        rho=None, rho2=None, momentum=None, verbose=False):
+                        rho=None, rho2=None, momentum=None, l1_l2 = None, verbose=False):
 
     def _check_missing_params(): # for own implementation lamda is passed into cost function
         missing = []
@@ -121,9 +121,15 @@ def neural_network_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
                 print(f"\nTraining with optimizer={optimizer_name}, lr={eta}, lambda={lmbd}, iterations={max_iterations}")
 
             model = model_fn()
-            print(model)
 
-            # Create optimizer per (eta, lambda) pair
+            if l1_l2 == 'L1':
+                model.cost_object.l1 = lmbd
+                print(f'L1 term: {model.cost_object.l1}')
+            elif l1_l2 == 'L2':
+                model.cost_object.l2 = lmbd
+                print(f'L2 term: {model.cost_object.l2}')
+
+
             if optimizer_name == 'ADAM':
                 optimizer = schedulers.ADAM(eta, rho, rho2)
             elif optimizer_name == 'SGD':
@@ -190,6 +196,7 @@ def pytorch_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
     results = []
     train_ds = TensorDataset(X_train_scaled, y_train_scaled)
     train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+
     loss_func = nn.MSELoss()
 
     for eta in etas:
