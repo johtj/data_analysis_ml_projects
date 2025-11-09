@@ -25,6 +25,28 @@ def plot_runges(x_line, y_line, x_scatter, y_scatter, alpha_val=0.5, title='reme
         plt.close(fig)
 
 
+def plot_runges_two_predictions(x_line, y_line, x_scatter1, y_scatter1, x_scatter2, y_scatter2, label_scatter1='remeber label scatter1', label_scatter2='remeber label scatter2', alpha_val=0.5, title='remember title',
+                filename='dummy', save_image=True, show_plot=True):
+    fig, ax = plt.subplots(figsize=(6, 4)) 
+
+    ax.scatter(x_scatter1, y_scatter1, alpha=alpha_val, label=label_scatter1, color='blue')
+    ax.scatter(x_scatter2, y_scatter2, alpha=alpha_val, label=label_scatter2, color='orange')
+    ax.plot(x_line, y_line, color='red', label='Runge function')
+
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_title(title)
+    ax.legend()
+
+    if save_image:
+        fig.savefig(f"{filename}.png", dpi=300, bbox_inches='tight')
+
+    if show_plot:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
 def plot_heatmap(dataset, heat_metric, title='remember title',
                  heat_index='Lambda', heat_column='Learning Rate',
                  y_axis_scientific=True, scientific_precision=3,
