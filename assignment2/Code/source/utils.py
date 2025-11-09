@@ -12,6 +12,40 @@ from torch.utils.data import DataLoader, TensorDataset
 
 
 
+# model generation - ensure new model each iteration
+
+def pytorch_model_fn(hidden_units_list, input_data, pytorch_activation, verbose=False):
+    """
+    Docstring created with Copilot
+
+    Creates a feedforward neural network with specified hidden layers and sigmoid activations.
+
+    Parameters:
+        input_data (torch.Tensor or np.ndarray): Used to determine input feature size.
+
+    Returns:
+        nn.Sequential: A PyTorch model.
+    """
+    hidden_units_list = [50, 100]
+    input_size = input_data.shape[1]
+    layers = []
+
+    for hidden_unit in hidden_units_list:
+        layers.append(nn.Linear(input_size, hidden_unit))
+        layers.append(pytorch_activation)  
+        input_size = hidden_unit
+
+    layers.append(nn.Linear(input_size, 1))  # Output layer
+
+    model = nn.Sequential(*layers)
+
+    if verbose: print(model)  # Optional: for inspection
+
+    return model
+
+
+
+
 def rescale_predictions(results, y_train_std, y_train_mean):
     min_index = results['MSE test'].idxmin()
     best_predictions = results.loc[min_index]['Predictions']
@@ -55,7 +89,7 @@ def create_activations_layderdim(activation_hidden, activation_hidden_derivative
     activation_output_derivative : callable
         Derivative of the activation function for the output .
     hidden : list of int
-        List specifying the number of neurons in each hidden .
+        List specifying the number of neurons in each hidden layer .
     target : np.ndarray
         Target output data. Used to determine the output  size.
     input : np.ndarray
@@ -89,6 +123,7 @@ def create_activations_layderdim(activation_hidden, activation_hidden_derivative
     activation_functions_derivative = [activation_hidden_derivative] * (num_s - 2) + [activation_output_derivative] 
 
     return activation_functions, activation_functions_derivative, _output_sizes
+
 
 
 def neural_network_loop(model_fn, etas, lambdas, optimizer_name, max_iterations,
