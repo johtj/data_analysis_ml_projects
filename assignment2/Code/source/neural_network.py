@@ -1,7 +1,7 @@
 import autograd.numpy as np
 import source.activation_functions as activation_functions
 #from activation_functions import activation_function
-from source.cost_functions import cost_function
+from source.cost_functions import cost_function, cost_function_regularized
 from source.cost_functions import mse
 from source.cost_functions import cross_entropy
 from typing import Callable
@@ -19,9 +19,9 @@ class NN:
     def __init__(self,dims: list[int],
                  activation_funcs: list[Callable],
                  activation_ders: list[Callable],
-                 cost: cost_function = mse(),
+                 #cost: cost_function = mse(),
+                 cost_object: cost_function_regularized,
                  seed: int = None): #if this one throws an error, switch to default val -99999 or something
-        
         
         self.dims = dims #list of positive integers specifying the number of nodes
         #for each layer dims[0] gives the number of nodes for input layer dims[1] for the
@@ -32,8 +32,9 @@ class NN:
         #NOTE: currently has no default, needs to add default 
         # construction as list length: len(dims)-1 of activation_functions.sigmoid
 
-        self.cost_func = cost.cost #callable, cost function method
-        self.cost_der = cost.cost_derivative #callable, derivative of the cost function
+        self.cost_object = cost_object
+        #self.cost_func = cost.cost #callable, cost function method
+        #self.cost_der = cost.cost_derivative #callable, derivative of the cost function
         self.seed = seed #seed for np.random
         
         self.weights = list() #list of arrays where (Weights,bias) for each layer
@@ -46,22 +47,30 @@ class NN:
         self.classification = None
 
         self.reset_weights()
-        
+
+        # Precompute weight shapes/sizes for slicing reg gradients
+        self._w_shapes = [W.shape for (W, b) in self.weights]
+        self._w_sizes  = [int(np.prod(s)) for s in self._w_shapes]
+        self._w_starts = np.cumsum([0] + self._w_sizes[:-1])
        
         #elf.setup_activation_functions() #add functionality to generate default case
         #where the activation funcs are the same, not having pass only
         #self._set_classification()
 
+    def get_weights(self):
+        return np.concatenate([w.flatten() for w, b in self.weights])
+            
     def fit(self,
             X: np.ndarray,
             t: np.ndarray,
             scheduler: scheduler_methods.scheduler,
-            batches: int = 1,
+            batches: int = 50, #1,
             epochs: int = 100,
-            lam: float = 0,
+            lam: float = 0,   # can be removed?
             X_val: np.ndarray = None,
             t_val: np.ndarray = None
             ):
+        
         if self.seed is not None:
             np.random.seed(self.seed)
 
@@ -81,17 +90,21 @@ class NN:
 
         batch_size = X.shape[0] // batches
 
+        print('L1 and L2 term')
+        print(self.cost_object.l1)
+        print(self.cost_object.l2)
+
         X, t = resample(X,t) 
 
-        cost_function_train = self.cost_func#(t)
-        if val_set:
-            cost_function_val = self.cost_func#(t_val)
+        #cost_function_train = self.cost_func#(t)
+        #if val_set:
+        #    cost_function_val = self.cost_func#(t_val)
 
         for i in range(len(self.weights)):
             self.schedulers_weight.append(copy(scheduler))
             self.schedulers_bias.append(copy(scheduler))
 
-        print(f"Using scheduler: {scheduler.__class__.__name__} with Eta={scheduler.eta}")  #LIST of schedulers, added [0] just to run code
+        print(f"Using scheduler: {scheduler.__class__.__name__} ")#with Eta={scheduler.eta}") 
 
         try: 
             for e in range(epochs):
@@ -112,21 +125,28 @@ class NN:
 
                 for scheduler in self.schedulers_bias:
                     scheduler.reset()
+
+                weights = self.get_weights()
                 
                 pred_train = self.predict(X)
-                training_error = cost_function_train(t, pred_train) #training_error = cost_function_train(pred_train) - missing target values
-                
-
-                train_errors[e] = training_error
+                #training_error = cost_function_train(t, pred_train) 
+                #train_errors[e] = self.cost_object.cost(t, pred_train, self.get_weights)
+                #train_errors[e] = training_error
+                cost_fn = self.cost_object
+                train_errors[e] = cost_fn.cost(t, pred_train, self.get_weights())
 
                 #validation
                 if val_set:
                     pred_val = self.predict(X_val)
-                    validation_error = cost_function_val(t_val, pred_val) #validation_error = cost_function_val(pred_val) - missing target values
-                    val_errors[e] = validation_error
+                    #val_errors[e] = self.cost_object.cost(t_val, pred_val, self.get_weights)
+                    cost_fn = self.cost_object
+                    val_errors[e] = cost_fn.cost(t_val, pred_val, self.get_weights())
+                    #validation_error = cost_function_val(t_val, pred_val) #validation_error = cost_function_val(pred_val) - missing target values
+                    #val_errors[e] = validation_error
                 
                 if self.classification:
-                    train_accuracy = self._accuracy(self.predict(X),t)
+                    #train_accuracy = self._accuracy(self.predict(X),t)
+                    train_accuracy = self._accuracy(pred_val,t)
                     train_accs[e] = train_accuracy
                     if val_set:
                         validation_accuracy = self._accuracy(pred_val,t_val)
@@ -248,7 +268,11 @@ class NN:
 
             if i == len(self.weights) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                dC_da = self.cost_der(self.a_matrices[-1], targets)  
+                #dC_da = self.cost_der(self.a_matrices[-1], targets)
+
+                base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
+                dC_da = base_grad
+  
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W, b) = self.weights[i + 1]
@@ -260,6 +284,13 @@ class NN:
             #calculate gradients
             gradient_weights = layer_input.T @ dC_dz
             gradient_bias = np.sum(dC_dz, axis=0) 
+
+            k = i
+            start = self._w_starts[k]
+            end   = start + self._w_sizes[k]
+            reg_grad_layer = reg_grad[start:end].reshape(self._w_shapes[k])
+            
+            gradient_weights += reg_grad_layer
 
             layer_grads[i] = (gradient_weights, gradient_bias)
 
@@ -315,7 +346,11 @@ class NN:
 
             if i == len(self.weights) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                dC_da = self.cost_der(self.a_matrices[-1], targets)  
+                #dC_da = self.cost_der(self.a_matrices[-1], targets)
+
+                base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
+                dC_da = base_grad
+  
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W, b) = self.weights[i + 1]
@@ -327,6 +362,7 @@ class NN:
             #calculate gradients
             gradient_weights = layer_input.T @ dC_dz
             gradient_bias = np.sum(dC_dz, axis=0) 
+
 
             layer_grads[i] = (gradient_weights, gradient_bias)
 
