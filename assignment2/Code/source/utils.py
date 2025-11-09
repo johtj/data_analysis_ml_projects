@@ -26,7 +26,6 @@ def pytorch_model_fn(hidden_units_list, input_data, pytorch_activation, verbose=
     Returns:
         nn.Sequential: A PyTorch model.
     """
-    hidden_units_list = [50, 100]
     input_size = input_data.shape[1]
     layers = []
 
