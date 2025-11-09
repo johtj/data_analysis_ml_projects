@@ -14,6 +14,7 @@ BATCH_SIZE = 64
 ETA_VALUES = [0.1, 0.01, 0.001, 0.0001]
 LAMBDA_VALUES = np.logspace(-2, -4, 10)
 MOMENTUM = 0.9
+NP_RANDOM_SEED = 250
 
 # Download MNIST dataset
 from sklearn.datasets import fetch_openml
