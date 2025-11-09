@@ -55,7 +55,7 @@ class NN:
        
         #elf.setup_activation_functions() #add functionality to generate default case
         #where the activation funcs are the same, not having pass only
-        #self._set_classification()
+        self._set_classification()
 
     def get_weights(self):
         return np.concatenate([w.flatten() for w, b in self.weights])
@@ -145,8 +145,7 @@ class NN:
                     #val_errors[e] = validation_error
                 
                 if self.classification:
-                    #train_accuracy = self._accuracy(self.predict(X),t)
-                    train_accuracy = self._accuracy(pred_val,t)
+                    train_accuracy = self._accuracy(self.predict(X),t)
                     train_accs[e] = train_accuracy
                     if val_set:
                         validation_accuracy = self._accuracy(pred_val,t_val)
@@ -269,17 +268,23 @@ class NN:
             if i == len(self.weights) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
                 #dC_da = self.cost_der(self.a_matrices[-1], targets)
+                if self.activation_funcs[-1].__name__ == "softmax":
 
-                base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
-                dC_da = base_grad
-  
+                    #TO DO: I am unclear of if this is correct, need to check the cost function to be sure
+                    base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
+                    dC_dz = base_grad
+                    #dC_dz = self.a_matrices[-1] - targets
+                else:
+                    base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
+                    dC_da = base_grad
+                    dC_dz = dC_da * activation_der(z)
             else:
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W, b) = self.weights[i + 1]
                 dC_da = dC_dz @ W.T 
 
-            #dC_dz = dC_da * self.activation_ders[i](self, X=z)
-            dC_dz = dC_da * activation_der(z)
+                #dC_dz = dC_da * self.activation_ders[i](self, X=z)
+                dC_dz = dC_da * activation_der(z)
 
             #calculate gradients
             gradient_weights = layer_input.T @ dC_dz
@@ -326,7 +331,23 @@ class NN:
         """
         assert prediction.size == target.size
         return np.average((target == prediction))
+        
 
+    def _set_classification(self):
+        """
+        Description:
+        ------------
+            Decides if FFNN acts as classifier (True) og regressor (False),
+            sets self.classification during init()
+        """
+        self.classification = False
+        if (
+            self.cost_object.__class__.__name__ == "class_binary_cros_entropy"
+            or self.cost_object.__class__.__name__ == "class_multiclass_cross_entropy"
+        ):
+            self.classification = True
+
+        print(f"Classification set: {self.classification}")
 
     def _backpropagation_for_gradient_check(self, inputs, targets):
         """
