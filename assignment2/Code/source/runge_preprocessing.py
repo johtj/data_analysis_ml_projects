@@ -40,6 +40,8 @@ y_noise = runge_function(x)
 np.random.seed(NP_RANDOM_SEED)
 y = runge_function(x, n_datapoints=DATAPOINTS, standard_deviation=0) # override standard deviation to get true function
 
+
+
 # split
 x_train, x_test, y_train, y_test = train_test_split(x, y_noise, test_size=TEST_SPLIT, random_state=TEST_TRAIN_RANDOM_STATE)
 
