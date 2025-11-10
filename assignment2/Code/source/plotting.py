@@ -48,16 +48,45 @@ def plot_runges_two_predictions(x_line, y_line, x_scatter1, y_scatter1, x_scatte
 
 
 
+
 def plot_runges_four_predictions(x_line, y_line, x_scatter1, y_scatter1, x_scatter2, y_scatter2, x_scatter3, y_scatter3, x_scatter4, y_scatter4, 
                                  label_scatter1='remeber label scatter1', label_scatter2='remeber label scatter2', label_scatter3='remeber label scatter3', label_scatter4='remeber label scatter4', 
-                                 alpha_val=0.5, title='remember title',
+                                 alpha_val=0.3, title='remember title',
                 filename='dummy', save_image=True, show_plot=True):
+    
     fig, ax = plt.subplots(figsize=(6, 4)) 
+    size = 20
+    ax.scatter(x_scatter1, y_scatter1, alpha=alpha_val, label=label_scatter1, color='blue', s=size)
+    ax.scatter(x_scatter2, y_scatter2, alpha=alpha_val, label=label_scatter2, color='orange', s=size)
+    ax.scatter(x_scatter3, y_scatter3, alpha=alpha_val, label=label_scatter3, color='green', s=size)
+    ax.scatter(x_scatter4, y_scatter4, alpha=alpha_val, label=label_scatter4, color='purple', s=size)
+    ax.plot(x_line, y_line, color='red', label='Runge function')
 
-    ax.scatter(x_scatter1, y_scatter1, alpha=alpha_val, label=label_scatter1, color='blue')
-    ax.scatter(x_scatter2, y_scatter2, alpha=alpha_val, label=label_scatter2, color='orange')
-    ax.scatter(x_scatter3, y_scatter3, alpha=alpha_val, label=label_scatter3, color='green')
-    ax.scatter(x_scatter4, y_scatter4, alpha=alpha_val, label=label_scatter4, color='purple')
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_title(title)
+    ax.legend()
+
+    if save_image:
+        fig.savefig(f"{filename}.png", dpi=300, bbox_inches='tight')
+
+    if show_plot:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+
+def plot_runges_three_predictions(x_line, y_line, x_scatter1, y_scatter1, x_scatter2, y_scatter2, x_scatter3, y_scatter3,
+                                 label_scatter1='remeber label scatter1', label_scatter2='remeber label scatter2', label_scatter3='remeber label scatter3', 
+                                 alpha_val=0.3, title='remember title',
+                filename='dummy', save_image=True, show_plot=True):
+    
+    fig, ax = plt.subplots(figsize=(6, 4)) 
+    size = 20
+    ax.scatter(x_scatter1, y_scatter1, alpha=alpha_val, label=label_scatter1, color='blue', s=size)
+    ax.scatter(x_scatter2, y_scatter2, alpha=alpha_val, label=label_scatter2, color='orange', s=size)
+    ax.scatter(x_scatter3, y_scatter3, alpha=alpha_val, label=label_scatter3, color='green', s=size)
     ax.plot(x_line, y_line, color='red', label='Runge function')
 
     ax.set_xlabel("x")
