@@ -48,7 +48,9 @@ class RMSprop(scheduler):
         delta = 1e-8
 
         self.second = self.rho * self.second + (1-self.rho) * gradients * gradients
-        return self.eta * gradients / (np.sqrt(self.second + delta)) 
+        #return self.eta * gradients / (np.sqrt(self.second + delta)) 
+        return self.eta * gradients / (np.sqrt(self.second) + delta) 
+        
 
     def reset(self):
         pass
@@ -72,7 +74,9 @@ class ADAM(scheduler):
         moment_debiased = self.moment / (1-self.rho**self.time_step)
         second_debiased = self.second / (1-self.rho2**self.time_step)
 
-        return self.eta * moment_debiased / (np.sqrt(second_debiased + delta))
+        #return self.eta * moment_debiased / (np.sqrt(second_debiased + delta))
+        return (self.eta * moment_debiased) / (np.sqrt(second_debiased) + delta)
+    
     
     def reset(self):
         self.time_step += 1

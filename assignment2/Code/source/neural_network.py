@@ -108,15 +108,26 @@ class NN:
 
         try: 
             for e in range(epochs):
+                # Per-epoch shuffle
+                idx = np.random.permutation(X.shape[0])
+
                 for i in range(batches):
-                    if i == batches -1:
-                        #if we are on the last batch, take everything that is left
-                        X_batch = X[i*batch_size : ,:]
-                        t_batch = t[i*batch_size : ,:]
-                    else:
-                        #regular case, use same batch size
-                        X_batch = X[i*batch_size : (i+1) * batch_size, :]
-                        t_batch = t[i*batch_size : (i+1) * batch_size, :]
+                    start = i * batch_size
+                    end = X.shape[0] if i == batches - 1 else (i + 1) * batch_size
+                    batch_idx = idx[start:end]
+
+                    X_batch = X[batch_idx, :]
+                    t_batch = t[batch_idx, :]
+
+                    #if i == batches -1:
+                    #    #if we are on the last batch, take everything that is left
+                    #    X_batch = X[i*batch_size : ,:]
+                    #    t_batch = t[i*batch_size : ,:]
+                    #else:
+                    #    #regular case, use same batch size
+                    #    X_batch = X[i*batch_size : (i+1) * batch_size, :]
+                    #    t_batch = t[i*batch_size : (i+1) * batch_size, :]
+                    
                     self._feedforward(X_batch)
                     self._backpropagation(X_batch,t_batch)
                 
