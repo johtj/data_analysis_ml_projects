@@ -1,7 +1,6 @@
 To run our neural network
 
-``
-
+```
 from source.neural_network import NN
 import source.cost_functions as cost_function
 import souce.activation_functions as activation_function
@@ -46,6 +45,5 @@ epoch_scores, predictions = NN_classify.fit(X=X_train,
                                             scheduler=optimizer_ADAM,
                                             X_val=X_test,
                                             t_val=y_test)
-
-``
+```
 
