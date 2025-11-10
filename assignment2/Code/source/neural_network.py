@@ -29,12 +29,10 @@ class NN:
 
         self.activation_funcs = activation_funcs #list of activation functions for hidden layers, 
         self.activation_ders = activation_ders
-        #NOTE: currently has no default, needs to add default 
-        # construction as list length: len(dims)-1 of activation_functions.sigmoid
+        
 
         self.cost_object = cost_object
-        #self.cost_func = cost.cost #callable, cost function method
-        #self.cost_der = cost.cost_derivative #callable, derivative of the cost function
+    
         self.seed = seed #seed for np.random
         
         self.weights = list() #list of arrays where (Weights,bias) for each layer
@@ -53,8 +51,7 @@ class NN:
         self._w_sizes  = [int(np.prod(s)) for s in self._w_shapes]
         self._w_starts = np.cumsum([0] + self._w_sizes[:-1])
        
-        #elf.setup_activation_functions() #add functionality to generate default case
-        #where the activation funcs are the same, not having pass only
+        
         self._set_classification()
 
     def get_weights(self):
@@ -64,9 +61,9 @@ class NN:
             X: np.ndarray,
             t: np.ndarray,
             scheduler: scheduler_methods.scheduler,
-            batches: int = 50, #1,
+            batches: int = 50, 
             epochs: int = 100,
-            lam: float = 0,   # can be removed?
+            lam: float = 0,   
             X_val: np.ndarray = None,
             t_val: np.ndarray = None
             ):
@@ -96,18 +93,15 @@ class NN:
 
         X, t = resample(X,t) 
 
-        #cost_function_train = self.cost_func#(t)
-        #if val_set:
-        #    cost_function_val = self.cost_func#(t_val)
-
         for i in range(len(self.weights)):
             self.schedulers_weight.append(copy(scheduler))
             self.schedulers_bias.append(copy(scheduler))
 
-        print(f"Using scheduler: {scheduler.__class__.__name__} ")#with Eta={scheduler.eta}") 
+        print(f"Using scheduler: {scheduler.__class__.__name__} ") 
 
         try: 
             for e in range(epochs):
+
                 # Per-epoch shuffle
                 idx = np.random.permutation(X.shape[0])
 
@@ -119,14 +113,6 @@ class NN:
                     X_batch = X[batch_idx, :]
                     t_batch = t[batch_idx, :]
 
-                    #if i == batches -1:
-                    #    #if we are on the last batch, take everything that is left
-                    #    X_batch = X[i*batch_size : ,:]
-                    #    t_batch = t[i*batch_size : ,:]
-                    #else:
-                    #    #regular case, use same batch size
-                    #    X_batch = X[i*batch_size : (i+1) * batch_size, :]
-                    #    t_batch = t[i*batch_size : (i+1) * batch_size, :]
                     
                     self._feedforward(X_batch)
                     self._backpropagation(X_batch,t_batch)
@@ -140,20 +126,17 @@ class NN:
                 weights = self.get_weights()
                 
                 pred_train = self.predict(X)
-                #training_error = cost_function_train(t, pred_train) 
-                #train_errors[e] = self.cost_object.cost(t, pred_train, self.get_weights)
-                #train_errors[e] = training_error
+                
                 cost_fn = self.cost_object
                 train_errors[e] = cost_fn.cost(t, pred_train, self.get_weights())
 
                 #validation
                 if val_set:
                     pred_val = self.predict(X_val)
-                    #val_errors[e] = self.cost_object.cost(t_val, pred_val, self.get_weights)
+                    
                     cost_fn = self.cost_object
                     val_errors[e] = cost_fn.cost(t_val, pred_val, self.get_weights())
-                    #validation_error = cost_function_val(t_val, pred_val) #validation_error = cost_function_val(pred_val) - missing target values
-                    #val_errors[e] = validation_error
+                    
                 
                 if self.classification:
                     train_accuracy = self._accuracy(self.predict(X),t)
@@ -201,22 +184,13 @@ class NN:
             np.random.seed(self.seed)
  
         self.weights = list()
-        """
-        generates weights that are output + 1 x input where first row of
-        weights = biases
-        for i in range(len(self.dims)-1):
-            weight_array = np.random.randn(self.dims[i]+1,self.dims[i+1])
-            weight_array[0,:] = np.random.randn(self.dims[i+1]) * 0.01
- 
-            self.weights.append(weight_array)
-        """
  
         """ Generates list, weights, of tuples (Weight, bias) where
         weight is output n x input m
         """
         output_size = self.dims[-1]
         i_size = self.dims[0]  # number of features input data
-        #print(self.dims[1:])
+        
         for layer_output_size in self.dims[1:]: # step through sizes of hidden and output layer
             W = np.random.randn(i_size, layer_output_size)
             b = np.random.randn(layer_output_size)
@@ -227,16 +201,12 @@ class NN:
 
     def _feedforward(self, X: np.ndarray):
         """
-        Functionality from feed_forward_batch in original neural_network.py code
-        uses activation func list, that 
+        Functionality from feed_forward_batch in original old_functionality/neural_network.py code
         """
         self.a_matrices = list()
         self.z_matrices = list()
     
         a = X
-
-        #self.a_matrices.append(a)
-        #self.z_matrices.append(a)
 
         for (W, b), activation_func in zip(self.weights, self.activation_funcs):
             if b.ndim == 2:
@@ -256,7 +226,6 @@ class NN:
             z = a @ W + b    
             self.z_matrices.append(z)
 
-            #a = activation_func(self, X=z)
             a = activation_func(z)
             self.a_matrices.append(a)
 
@@ -265,7 +234,9 @@ class NN:
     
   
     def _backpropagation(self, inputs, targets):
-        # Use the existing feed_forward_batch to get intermediate values
+        """
+        Functionality from back_propagation_batch in original old_functionality/neural_network.py code
+        """
 
         # Add the original inputs to the beginning of layer_inputs
         layer_inputs = [inputs] + self.a_matrices
@@ -278,24 +249,22 @@ class NN:
 
             if i == len(self.weights) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                #dC_da = self.cost_der(self.a_matrices[-1], targets)
+                
                 if self.activation_funcs[-1].__name__ == "softmax":
 
-                    #TO DO: I am unclear of if this is correct, need to check the cost function to be sure
                     base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
                     dC_dz = base_grad
 
-                    #dC_dz = self.a_matrices[-1] - targets
                 else:
                     base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
                     dC_da = base_grad
                     dC_dz = dC_da * activation_der(z)
             else:
+
                 # For other layers we build on previous z derivative, as dC_da(i) = dC_dz(i+1) * dz(i+1)_da(i)
                 (W, b) = self.weights[i + 1]
                 dC_da = dC_dz @ W.T 
 
-                #dC_dz = dC_da * self.activation_ders[i](self, X=z)
                 dC_dz = dC_da * activation_der(z)
 
             #calculate gradients
@@ -333,9 +302,9 @@ class NN:
 
         Parameters:
         ------------
-            I   prediction (np.ndarray): vector of predicitons output network
+            prediction (np.ndarray): vector of predicitons output network
                 (1s and 0s in case of classification, and real numbers in case of regression)
-            II  target (np.ndarray): vector of true values (What the network ideally should predict)
+            target (np.ndarray): vector of true values (What the network ideally should predict)
 
         Returns:
         ------------
@@ -366,6 +335,7 @@ class NN:
         Removed update of gradients from _backpropagation. 
         Gradient comparison is done on first backpropagation step.
         """
+
         # Use the existing feed_forward_batch to get intermediate values
 
         # Add the original inputs to the beginning of layer_inputs
@@ -379,8 +349,7 @@ class NN:
 
             if i == len(self.weights) - 1:
                 # For last layer we use cost derivative as dC_da(L) can be computed directly
-                #dC_da = self.cost_der(self.a_matrices[-1], targets)
-
+        
                 base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
                 dC_da = base_grad
   
@@ -389,7 +358,6 @@ class NN:
                 (W, b) = self.weights[i + 1]
                 dC_da = dC_dz @ W.T 
 
-            #dC_dz = dC_da * self.activation_ders[i](self, X=z)
             dC_dz = dC_da * activation_der(z)
 
             #calculate gradients

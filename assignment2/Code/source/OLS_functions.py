@@ -401,20 +401,6 @@ def explore_polynomial_degree(X_train, X_test, y_train, y_test, p, use_intercept
 
         if verbose: print('\n\n')
 
-        # Sklearn Linear Regression without intercept for validation of code, test dataset only.
-        # only for validation of own code        
-        #from sklearn.linear_model import LinearRegression
-        #model = LinearRegression(fit_intercept=use_intercept)
-        #model.fit(X_train_sliced, y_train)
-        #y_pred_sklearn = model.predict(X_test_sliced)
-        #mse_sklearn = MSE(y_test, y_pred_sklearn)
-        #r2_sklearn = R2(y_test, y_pred_sklearn)
-
-        #if verbose:
-            #print(f"Polynomial degree: {degree}, Sklearn test R2: {r2_sklearn}, Sklearn test MSE: {mse_sklearn}")
-            #print(f"Polynomial degree: {degree}, R2 test: Own - sklearn {r2_test_OLS - r2_sklearn}, MSE test: Own - sklearn {mse_test_OLS - mse_sklearn}")
-            #print(f"Polynomial degree: {degree}, Coef: {model.coef_}, intercept: {model.intercept_}")
-            #print('\n') # just to add line shift between different degrees in output
     
     return polynomial_degree, mse_train, mse_test, r2_train, r2_test, thetas
 
