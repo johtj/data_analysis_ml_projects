@@ -284,6 +284,7 @@ class NN:
                     #TO DO: I am unclear of if this is correct, need to check the cost function to be sure
                     base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
                     dC_dz = base_grad
+
                     #dC_dz = self.a_matrices[-1] - targets
                 else:
                     base_grad, reg_grad = self.cost_object.cost_derivative(targets, self.a_matrices[-1], self.get_weights())
